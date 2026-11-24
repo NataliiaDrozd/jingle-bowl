@@ -217,6 +217,9 @@ textarea.input{min-height:110px;resize:vertical}
 .ex-btns .btn small{font-size:.75rem;font-weight:600;opacity:.8;width:100%}
 .hostbar.inline{position:static;transform:none;margin:4px auto 0;width:fit-content;box-shadow:none}
 .btn.skipb{background:rgba(255,255,255,.1)}
+.btn.undo{position:relative;overflow:hidden;background:rgba(244,194,91,.14);border-color:rgba(244,194,91,.45);font-size:.95rem;padding:10px 18px}
+.btn.undo::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:100%;background:var(--gold);transform-origin:left;animation:undoBar 5s linear forwards}
+@keyframes undoBar{to{transform:scaleX(0)}}
 .btn.correctb{background:linear-gradient(180deg,#2bd08f,var(--green2));box-shadow:0 10px 30px rgba(33,180,125,.35)}
 
 /* Watch */
@@ -322,9 +325,9 @@ const RING_C = 2 * Math.PI * 54;
 const TEAMS = { red: { name: "Team Santa", short: "Santa", emoji: "🎅" }, blue: { name: "Team Frost", short: "Frost", emoji: "❄️" } };
 /* ---------- Word packs (simple single words) — used by 🎲 Suggest and the host's "+10 random words" ---------- */
 const PACKS = {
-  newyear: { name: "New Year & Winter", icon: "🎄", words: `Snowman Snowflake Snowball Reindeer Santa Sleigh Gift Present Ribbon Candle Fireplace Chimney Stocking Ornament Tinsel Garland Star Angel Bell Mistletoe Wreath Icicle Igloo Penguin Mittens Scarf Sweater Boots Skates Skiing Snowboard Sled Blizzard Frost Winter December January Midnight Countdown Fireworks Champagne Toast Party Confetti Calendar Resolution Wish Kiss Dance Costume Mask Cookie Gingerbread Candy Chocolate Tangerine Cocoa Pie Turkey Feast Elf Cozy Blanket Pajamas Sauna Holiday Clock Glitter Sparkler Balloon Shovel Cinnamon Nutcracker Choir Jingle Lights Tree Pine Snowfall Hat Earmuffs Gloves Wrapping Postcard Envelope Letter Moon Hockey Avalanche Mountain Cabin Firewood Lantern Marshmallow Eggnog Fortune Chandelier Fairy Magic Miracle Hug Family Guests Dessert Cake Cheese Salad Orange Socks Slippers Fridge Hangover Nap Snore`.split(" ") },
-  movies: { name: "Movies & Pop culture", icon: "🎬", words: `Titanic Shrek Batman Superman Spiderman Hulk Zombie Vampire Dracula Frankenstein Dinosaur Robot Alien Pirate Wizard Witch Ninja Cowboy Sheriff Detective Spy Superhero Villain Princess Dragon Unicorn Mermaid Ghost Mummy Werewolf Godzilla Rocky Rambo Terminator Matrix Avatar Frozen Cinderella Pinocchio Aladdin Tarzan Simba Pikachu Mario Barbie Joker Godfather Gladiator Jaws Bambi Dumbo Minions Ghostbusters Hogwarts Gollum Yoda Jedi Lightsaber Oscar Hollywood Popcorn Cinema Trailer Sequel Director Actor Stuntman Camera Netflix YouTube TikTok Instagram Selfie Meme Emoji Podcast Influencer Shakira Madonna Elvis Beatles Rihanna Sherlock Hobbit Simpsons Tetris Minecraft Lego Grammy Eurovision Karaoke Disco Rockstar Paparazzi Blockbuster Cartoon Anime Sitcom Musical Spoiler Headphones Microphone Guitar Drums Piano Concert Autograph Fan Tattoo Magician Clown Circus`.split(" ") },
-  office: { name: "IT & Office life", icon: "💻", words: `Laptop Keyboard Mouse Monitor Printer Deadline Meeting Coffee Password WiFi Bug Email Zoom Excel Spreadsheet Presentation Slide Report Budget Boss Manager Intern Recruiter Interview Resume Salary Bonus Promotion Vacation Overtime Weekend Monday Friday Standup Sprint Backlog Release Server Cloud Database Code Developer Designer Tester Hacker Virus Firewall Backup Update Reboot Login Screenshot Headset Webcam Mute Invite Reminder Notification Chat Feedback Office Desk Chair Elevator Kitchen Snack Pizza Teambuilding Onboarding Contract Freelancer Startup Investor Client Customer Sales Marketing Algorithm Chatbot Python Java Hotfix Demo Prototype Ticket Burnout Coworker Remote Commute Badge Stapler Whiteboard Sticker Charger Battery Router Bluetooth Download Upload Spam Inbox Signature Agenda Brainstorm Workshop Webinar Lunch Calendar Timesheet Dashboard Bonus Strategy`.split(" ") },
+  newyear: { name: "New Year & Winter", icon: "🎄", words: `Snowman Snowflake Snowball Reindeer Santa Gift Candle Fireplace Star Angel Bell Igloo Penguin Scarf Sweater Boots Skates Snowboard Sled Winter Midnight Countdown Fireworks Champagne Party Confetti Calendar Kiss Dance Costume Mask Cookie Gingerbread Candy Chocolate Cocoa Turkey Elf Blanket Pajamas Sauna Balloon Shovel Lights Tree Hat Gloves Wrapping Postcard Letter Moon Hockey Mountain Cabin Marshmallow Fairy Magic Hug Cake Cheese Salad Orange Socks Fridge Hangover Nap Ski Snowstorm Ice Coat Toy Bear Shopping Dinner Cards Speech Dress Makeup`.split(" ") },
+  movies: { name: "Movies & Pop culture", icon: "🎬", words: `Titanic Shrek Batman Superman Spiderman Hulk Zombie Vampire Frankenstein Dinosaur Alien Pirate Wizard Witch Ninja Cowboy Sheriff Detective Spy Dragon Unicorn Mermaid Ghost Mummy Werewolf Godzilla Rocky Rambo Terminator Matrix Avatar Frozen Cinderella Pinocchio Aladdin Tarzan Simba Pikachu Mario Barbie Joker Godfather Gladiator Jaws Bambi Dumbo Minions Hogwarts Yoda Lightsaber Oscar Hollywood Popcorn Stuntman Camera Netflix TikTok Selfie Meme Emoji Shakira Elvis Sherlock Hobbit Tetris Minecraft Lego Karaoke Disco Rockstar Paparazzi Anime Headphones Guitar Drums Piano Autograph Fan Tattoo Clown Circus Zorro Thor Hercules Nemo Garfield Rapunzel Mickey Cleopatra Ironman Mowgli Chaplin Astronaut Spaceship DJ Moonwalk Viking Gorilla Panda Knight`.split(" ") },
+  office: { name: "IT & Office life", icon: "💻", words: `Laptop Keyboard Mouse Monitor Printer Deadline Meeting Coffee Password WiFi Bug Email Zoom Presentation Boss Intern Recruiter Interview Resume Salary Vacation Overtime Friday Standup Sprint Cloud Database Developer Designer Hacker Virus Reboot Screenshot Mute Desk Chair Elevator Kitchen Snack Pizza Python Burnout Badge Stapler Whiteboard Sticker Battery Download Upload Brainstorm Lunch Timesheet Calculator Handshake Folder Cable Applause Rocket Like Joystick Chart Target Tie Bitcoin Robot Copy-paste Wave`.split(" ") },
 };
 (() => { const seen = new Set(); for (const pk of Object.values(PACKS)) pk.words = pk.words.filter(w => { const k = w.toLowerCase(); if (!w || seen.has(k)) return false; seen.add(k); return true; }); })();
 const PACK_IDS = Object.keys(PACKS);
@@ -338,9 +341,9 @@ function randomPackWords(n, extraUsed = []) {
 }
 
 const ROUNDS = {
-  1: { name: "Describe", icon: "💬", rule: "Use any words except the word itself — no spelling, no “sounds like”." },
+  1: { name: "Describe", icon: "💬", rule: "Use any words except the word itself or any part of it — no spelling, no “sounds like”." },
   2: { name: "Charades", icon: "🎭", rule: "No words, no sounds — act it out with gestures only." },
-  3: { name: "One Word", icon: "☝️", rule: "Say exactly ONE word as your clue. Choose wisely!" },
+  3: { name: "One Word", icon: "☝️", rule: "Say exactly ONE word — not the word itself or any part of it. Gestures are allowed!" },
 };
 
 /* ---------- Safe storage (some embedded/private browsers block it) ---------- */
@@ -602,7 +605,7 @@ function finishTurn(g, reason) {
   if (g.current) deck.push(g.current); // unfinished card goes back into the bowl
   g.current = null; g.deck = deck;
   g.lastTurn = { team: g.turnTeam, pid: g.explainer, name: pname(players, g.explainer), log: arr(g.log), reason, round: g.round || 1 };
-  g.log = null; g.turnEndsAt = null;
+  g.log = null; g.turnEndsAt = null; g.undo = null;
   g.last = { ...(g.last || {}), [g.turnTeam]: g.explainer };
   g.turnTeam = other(g.turnTeam);
   if (deck.length === 0) g.phase = (g.round || 1) >= (g.totalRounds || 1) ? "over" : "roundEnd";
@@ -621,7 +624,7 @@ function startTurn() {
     if (!ex || ex.team !== g.turnTeam) { g.explainer = nextExplainer(players, g, g.turnTeam); if (!g.explainer) return; }
     g.current = deck.splice(Math.floor(Math.random() * deck.length), 1)[0];
     g.deck = deck; g.phase = "turn"; g.turnId = (g.turnId || 0) + 1; g.log = [];
-    g.skipLimit = settings.skipLimit; g.turnSecs = settings.timer; g.turnEndsAt = S.db.now() + settings.timer * 1000;
+    g.undo = null; g.skipLimit = settings.skipLimit; g.turnSecs = settings.timer; g.turnEndsAt = S.db.now() + settings.timer * 1000;
     return g;
   });
 }
@@ -644,6 +647,32 @@ async function cardAction(result) {
     const deck = arr(cur.deck);
     if (!deck.length) return finishTurn(cur, "deck");
     cur.current = deck.splice(Math.floor(Math.random() * deck.length), 1)[0]; cur.deck = deck;
+    cur.undo = { w: word, r: result, next: cur.current, at: S.db.now(), turnId: tid }; // only the last action, for a few seconds
+    return cur;
+  });
+  S.busy = false;
+}
+
+/* ---------- Undo: the explainer can take back the last Correct/Skip for a few seconds ---------- */
+const UNDO_MS = 5000;
+const undoLeftMs = g => (g.phase === "turn" && g.undo && g.undo.turnId === g.turnId ? UNDO_MS - (S.db.now() - g.undo.at) : 0);
+async function undoAction() {
+  const { g } = ctx();
+  if (S.busy || g.explainer !== S.pid || undoLeftMs(g) <= 0 || remainingMs(g) <= 0) return;
+  S.busy = true;
+  await txGame(cur => {
+    const u = cur.undo;
+    if (cur.phase !== "turn" || !u || u.turnId !== cur.turnId || cur.current !== u.next || S.db.now() - u.at > UNDO_MS + 1000) return;
+    const log = arr(cur.log); const last = log[log.length - 1];
+    if (!last || last.w !== u.w) return;
+    log.pop(); cur.log = log;
+    const deck = arr(cur.deck); deck.push(u.next); cur.deck = deck; // the card that came next goes back into the bowl
+    cur.current = u.w;
+    if (u.r === "ok") {
+      cur.scores = { red: 0, blue: 0, ...(cur.scores || {}) }; cur.scores[cur.turnTeam] = Math.max(0, cur.scores[cur.turnTeam] - 1);
+      cur.pts = { ...(cur.pts || {}) }; cur.pts[cur.explainer] = Math.max(0, (cur.pts[cur.explainer] || 0) - 1);
+    }
+    cur.undo = null;
     return cur;
   });
   S.busy = false;
@@ -657,7 +686,7 @@ function hostSkipPlayer() {
     if (g.phase === "turn") {
       const deck = arr(g.deck); if (g.current) deck.push(g.current);
       g.lastTurn = { team: g.turnTeam, pid: g.explainer, name: pname(players, g.explainer), log: arr(g.log), reason: "skipped", round: g.round || 1 };
-      Object.assign(g, { deck, current: null, log: null, turnEndsAt: null, phase: "between" });
+      Object.assign(g, { deck, current: null, log: null, turnEndsAt: null, undo: null, phase: "between" });
     } else if (g.phase !== "between") return;
     g.last = { ...(g.last || {}), [g.turnTeam]: g.explainer };
     g.explainer = nextExplainer(players, g, g.turnTeam);
@@ -810,6 +839,7 @@ const ACTIONS = {
   "next-round": () => nextRound(),
   "host-skip": () => { S.modal = { title: "Skip current player?", body: "Their turn ends now (points already scored are kept) and the next player on the same team is up.", ok: "Skip player", action: "host-skip-confirm" }; render(); },
   "host-skip-confirm": () => { S.modal = null; render(); hostSkipPlayer(); },
+  undo: (ds, el) => { el?.blur(); undoAction(); },
   "end-my-turn": (ds, el) => { el?.blur(); const { g } = ctx(); if (g.phase === "turn" && g.explainer === S.pid) endTurn(g.turnId, "gaveup"); },
   "host-end": () => { const { g } = ctx(); if (g.phase === "turn") endTurn(g.turnId, "host"); },
   "host-reset": () => { S.modal = { title: "Reset the game?", body: "Scores and all words in the bowl will be cleared. Players and teams stay. Everyone returns to the lobby.", ok: "Reset game", action: "reset-confirm", danger: true }; render(); },
@@ -983,7 +1013,7 @@ function viewSubmit() {
           <div class="mywords">${mine.map(w => `<span class="wchip">${esc(w)}</span>`).join("")}</div>
           <button class="btn" style="margin-top:14px" data-action="edit-words">✏️ Edit my words</button>
         ` : `
-          <p class="muted" style="margin-bottom:14px">Add <b>${N}</b> English word${N > 1 ? "s" : ""}. Keep them secret!<br>Any word everyone at the party would know. Need ideas? New Year, movies, office life… or tap 🎲</p>
+          <p class="muted" style="margin-bottom:14px">Add <b>${N}</b> English word${N > 1 ? "s" : ""}. Keep them secret!<br>Any word everyone at the party would know. Need ideas? New Year, movies, office life… or tap 🎲${settings.mode === "classic" ? `<br>🎭 Heads up: in Round 2 you'll act these words out, so pick things you could show without talking!` : ""}</p>
           <form data-submit="submitWords" class="stack" autocomplete="off">
             ${Array.from({ length: N }, (_, i) => `<div class="word-row"><input class="input" data-model="word" data-i="${i}" maxlength="40" placeholder="Word #${i + 1}" value="${esc(S.drafts.words[i] || "")}"><button type="button" class="btn dice" data-action="suggest" data-i="${i}" title="Suggest a random word" aria-label="Suggest a random word">🎲</button></div>`).join("")}
             <p class="small muted">Stuck? Tap 🎲 for a random word — keep it or type over it.</p>
@@ -1099,6 +1129,7 @@ function viewExplainer() {
       <button class="btn skipb" data-action="skip" ${sl <= 0 ? "disabled" : ""}>✗ Skip <kbd>S</kbd>${sl === Infinity ? "" : `<small>${sl} left</small>`}</button>
       <button class="btn correctb" data-action="correct">✓ Correct <kbd>Space</kbd></button>
     </div>
+    ${undoLeftMs(g) > 0 ? `<div class="center"><button class="btn undo" data-action="undo" data-key="undo-${log.length}">↩️ Undo: ${g.undo.r === "ok" ? "✓" : "✗"} ${esc(g.undo.w)} <kbd>⌫</kbd></button></div>` : ""}
     ${sl <= 0 ? `<div class="center"><button class="btn ghost" data-action="end-my-turn">🏳️ No skips left? End my turn</button><div class="small muted" style="margin-top:4px">The card goes back into the bowl. Points from this turn are kept.</div></div>` : ""}
     ${hostBar(true)}
   </div>`;
@@ -1169,7 +1200,7 @@ function viewOver() {
 
 function hostBar(inline = false) {
   const { g, isHost } = ctx();
-  if (!isHost || g.phase === "lobby") return "";
+  if (!isHost || g.phase === "lobby" || g.phase === "over") return ""; // game over: the big "Play again" button does the reset
   // When the host is explaining, controls sit under the card buttons instead of floating over them.
   const hostExplaining = g.phase === "turn" && g.explainer === S.pid;
   if (hostExplaining !== inline) return "";
@@ -1237,6 +1268,7 @@ function render() {
 function tick() {
   if (!S.code || !S.data) return;
   const off = hostOffline(); if (off !== S.lastHostOff) { S.lastHostOff = off; render(); }
+  const uv = undoLeftMs(ctx().g) > 0; if (uv !== S.lastUndoVis) { S.lastUndoVis = uv; render(); }
   const { g, isHost } = ctx();
   if (g.phase !== "turn") return;
   const t = timerState(g); const ms = remainingMs(g);
@@ -1282,6 +1314,7 @@ function bindEvents() {
     if (g.phase !== "turn" || g.explainer !== S.pid) return;
     if (e.code === "Space" || e.key === " ") { e.preventDefault(); if (!e.repeat) cardAction("ok"); }
     else if (e.key === "s" || e.key === "S") { e.preventDefault(); if (!e.repeat) cardAction("skip"); }
+    else if (e.key === "Backspace") { e.preventDefault(); if (!e.repeat) undoAction(); }
   });
 }
 
