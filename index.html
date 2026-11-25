@@ -134,7 +134,7 @@ textarea.input{min-height:110px;resize:vertical}
 .unassigned .tags{display:flex;flex-wrap:wrap;gap:8px}
 .tag{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.07);font-size:.88rem;font-weight:600}
 .set-row{margin-bottom:16px}
-.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .mode{padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--panel);text-align:left}
 .mode b{display:block;font-size:.98rem}.mode span{font-size:.8rem;color:var(--muted)}
 .mode.on{border-color:var(--gold);background:rgba(244,194,91,.12);box-shadow:0 0 0 3px rgba(244,194,91,.12)}
@@ -155,6 +155,39 @@ textarea.input{min-height:110px;resize:vertical}
 .wchip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.08);font-weight:600;font-size:.92rem;animation:pop .35s ease both}
 .wchip.ok{background:rgba(33,180,125,.18);color:#c9f7e4}
 .nw{white-space:nowrap}
+.chip.banned,.pill.banned{text-decoration:line-through;opacity:.45}
+.clue-rules{margin:0;padding-left:20px;line-height:1.6}
+.clue-head{margin-bottom:16px}
+.clue-split>.panel,.clue-split>.panel+.panel{margin:0}
+.clue-team h3{margin:0 0 8px}
+.clue-team.t-red{border-left:4px solid var(--red)}.clue-team.t-blue{border-left:4px solid var(--blue)}
+.clue-timer{text-align:center;padding:14px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
+.clue-timer b{font-family:var(--display, inherit);font-size:2.6rem;display:block;line-height:1}
+.clue-timer span{font-size:.75rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.clue-timer .bar{height:6px;border-radius:6px;background:rgba(255,255,255,.08);margin-top:10px;overflow:hidden}
+.clue-timer .bar i{display:block;height:100%;background:var(--gold);transform-origin:left}
+.clue-timer.urgent b{color:var(--red)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.opt{padding:22px 10px;border-radius:16px;background:#fffdf6;color:#1b2142;font-weight:800;font-size:1.35rem;border:3px solid transparent;transition:transform .15s}
+.opt:hover{transform:translateY(-2px);border-color:var(--gold)}
+.clue-word{display:inline-block;margin:6px 0 14px;padding:10px 26px;border-radius:14px;background:#fffdf6;color:#1b2142;font-weight:800;font-size:1.8rem}
+.clue-form{display:grid;gap:10px;margin-top:6px}
+.clue-form input{width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:inherit;font-size:1.1rem}
+.clue-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.clue-meta .bad{color:#ff8a95;font-weight:600}
+.clue-big{font-size:1.5rem;font-weight:700;margin:8px 0;line-height:1.3}
+.locked{color:#7be0b3;font-weight:600}
+.clue-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.clue-half.t-red{border-top:4px solid var(--red)}.clue-half.t-blue{border-top:4px solid var(--blue)}
+.clue-answer-word{margin:6px 0 12px;font-size:1.1rem}.clue-answer-word b{background:#fffdf6;color:#1b2142;padding:3px 12px;border-radius:8px}
+.ans-list{display:grid;gap:6px;margin-top:8px}
+.ans{display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.06);text-align:left;animation:pop .35s ease both;font-size:.95rem}
+.ans span{color:var(--muted)}.ans.none i{color:var(--muted)}
+.ans.ok{background:rgba(33,180,125,.18)}.ans.ok b{color:#7be0b3}
+.ans.no{background:rgba(239,75,92,.14)}.ans.no b{color:#ff9aa5;text-decoration:line-through}
+.ans.tog{cursor:pointer;border:1px dashed rgba(255,255,255,.25)}
+.host-panel p{margin:6px 0 12px;line-height:1.6}
+@media (max-width:760px){.clue-split{grid-template-columns:1fr}.opts{grid-template-columns:1fr}}
 .wchip.time{background:rgba(244,194,91,.14);color:#f6dba0}
 .wchip.skip{background:rgba(255,255,255,.06);color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.35)}
 @keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
@@ -387,12 +420,14 @@ const packWords = () => PACK_IDS.flatMap(id => PACKS[id].words);
 
 const ROUNDS = {
   alias: { name: "Alias", icon: "💬", rule: "Explain the word without saying it or any part of it — no spelling, no “sounds like”." },
-  draw: { name: "Draw", icon: "🎨", rule: "Draw it! No letters, numbers or talking — your team guesses from the picture." },
+  clue: { name: "One Clue", icon: "🧩", rule: "One player per team writes a short clue. Everyone else gets one guess — more correct answers, more points!" },
+  draw: { name: "Draw", icon: "🎨", rule: "Draw it! Don't write the secret word. Numbers, arrows and symbols are OK. You can only say: Yes, No, Close, Almost." },
 };
-const roundKind = g => (g.mode === "draw" && (g.round || 1) === 2 ? "draw" : "alias");
+const hasDraw = mode => mode === "draw" || mode === "clue"; // "clue" = Alias + Draw + One Clue
+const roundKind = g => { const r = g.round || 1; return hasDraw(g.mode) && r === 2 ? "draw" : g.mode === "clue" && r === 3 ? "clue" : "alias"; };
 // Points per guessed word in round i (1-based): the Draw round is worth more (×1/×2/×3, set in the lobby, frozen at game start).
-const roundPts = (g, i) => (g.mode === "draw" && i === 2 ? g.drawPts || 1 : 1);
-const drawPtsNote = n => (n > 1 ? ` Each word = <b>${n} points</b>.` : "");
+const roundPts = (g, i) => (hasDraw(g.mode) && i === 2 ? g.drawPts || 1 : 1);
+const drawPtsNote = n => (n > 1 ? ` Each guessed word = <b>${n} points</b>.` : "");
 const roundInfo = g => ROUNDS[roundKind(g)];
 
 /* ---------- Safe storage (some embedded/private browsers block it) ---------- */
@@ -488,8 +523,8 @@ function ctx() {
   const g = d.game || { phase: "lobby" };
   const players = {};
   for (const [id, p] of Object.entries(d.players || {})) if (p && p.name) players[id] = p;
-  const settings = { timer: 60, drawTimer: 90, skipLimit: 3, mode: "draw", drawPts: 2, ...(d.settings || {}) };
-  if (settings.mode !== "alias" && settings.mode !== "draw") settings.mode = "draw"; // rooms from older versions
+  const settings = { timer: 60, drawTimer: 90, skipLimit: 3, mode: "draw", drawPts: 2, clueWords: 5, clueTime: 60, guessTime: 60, cluePts: 2, ...(d.settings || {}) };
+  if (!["alias", "draw", "clue"].includes(settings.mode)) settings.mode = "draw"; // rooms from older versions
   return { d, g, players, me: players[S.pid], settings, isHost: d.meta?.hostId === S.pid, hostId: d.meta?.hostId };
 }
 const teamList = (players, team) => Object.entries(players)
@@ -527,6 +562,11 @@ function tally(g) {
   const add = (team, pid, log, k) => { for (const x of arr(log)) if (x.r === "ok") { sc[team] = (sc[team] || 0) + k; pts[pid] = (pts[pid] || 0) + k; } };
   arr(g.rounds).forEach((r, i) => { for (const t of arr(r.turns)) add(t.team, t.pid, t.log, roundPts(g, i + 1)); });
   if (g.phase === "turn") add(g.turnTeam, g.explainer, g.log, roundPts(g, g.round || 1));
+  for (const c of clueCircles(g)) { // 🧩 One Clue: team points; player points split between the writer and correct guessers
+    const { out, share } = clueTally(c, g.cluePts || 2);
+    for (const t of ["red", "blue"]) sc[t] = (sc[t] || 0) + out[t].pts;
+    for (const [id, n] of Object.entries(share)) pts[id] = (pts[id] || 0) + n;
+  }
   return { sc, pts };
 }
 // Skips left this turn (Infinity when unlimited). Limit is frozen into the game at turn start.
@@ -572,7 +612,7 @@ async function createRoom() {
     const pid = uid(); const now = S.db.now();
     await S.db.set(`rooms/${code}`, {
       meta: { hostId: pid, createdAt: now },
-      settings: { timer: 60, drawTimer: 90, skipLimit: 3, mode: "draw", drawPts: 2 },
+      settings: { timer: 60, drawTimer: 90, skipLimit: 3, mode: "draw", drawPts: 2, clueWords: 5, clueTime: 60, guessTime: 60, cluePts: 2 },
       players: { [pid]: { name, joinedAt: now, online: true } },
       game: { phase: "lobby" },
     });
@@ -698,6 +738,7 @@ function usedWords(g) {
   for (const R of arr(g.rounds)) for (const t of arr(R.turns)) for (const x of arr(t.log)) set.add(String(x.w).toLowerCase());
   for (const x of arr(g.log)) set.add(String(x.w).toLowerCase());
   if (g.current) set.add(String(g.current).toLowerCase());
+  for (const c of [...arr(g.clueHistory), g.clue].filter(Boolean)) for (const T of Object.values(c.teams || {})) for (const w of arr(T.options)) set.add(String(w).toLowerCase());
   return [...set];
 }
 
@@ -791,6 +832,7 @@ function confirmRound() {
     rounds[ri] = { ...(rounds[ri] || {}), locked: true };
     if ((g.round || 1) >= (g.totalRounds || 1)) { g.rounds = rounds; g.phase = "over"; return g; }
     g.round = (g.round || 1) + 1; rounds.push({ locked: false }); g.rounds = rounds;
+    if (roundKind(g) === "clue") { g.phase = "clue"; g.deck = null; g.clue = newClueCircle(g, players, {}); g.turnTeam = null; return g; }
     const played = new Set(); for (const R of rounds) for (const t of arr(R.turns)) for (const x of arr(t.log)) played.add(String(x.w).toLowerCase());
     g.deck = buildDeck(roundKind(g), new Set(arr(g.used)), played); // Draw round: fresh drawable words only
     const start = g.round % 2 === 0 ? other(g.firstTeam) : g.firstTeam; // the other team opens round 2
@@ -815,12 +857,197 @@ async function startGame() {
   const first = Math.random() < .5 ? "red" : "blue";
   let used = new Set(arr(ctx().g.used));
   if (!packWords().some(w => !used.has(w.toLowerCase()))) used = new Set(); // every word was played already: start the memory over
-  const g = { phase: "between", mode: settings.mode, round: 1, totalRounds: settings.mode === "draw" ? 2 : 1, firstTeam: first, used: [...used],
-    drawPts: settings.mode === "draw" ? settings.drawPts || 1 : 1,
+  const g = { phase: "between", mode: settings.mode, round: 1, totalRounds: settings.mode === "clue" ? 3 : settings.mode === "draw" ? 2 : 1, firstTeam: first, used: [...used],
+    drawPts: hasDraw(settings.mode) ? settings.drawPts || 1 : 1,
+    clueWords: settings.clueWords || 5, clueTime: settings.clueTime || 60, guessTime: settings.guessTime || 60, cluePts: settings.cluePts || 2,
     deck: buildDeck("alias", used, new Set()), queue: buildQueue(players, first, 1), turnIdx: 0, rounds: [{ locked: false }], turnId: 0, startedAt: S.db.now() };
   setSlot(g, players);
   await S.db.update(roomPath(), { game: g, draw: null, words: null, extraWords: null });
 }
+
+/* ---------- 🧩 One Clue (round 3 of "Alias + Draw + Clue") ----------
+   Each team: one writer gets 2 words, picks one, writes a clue of ≤ N words; teammates get ONE typed guess each.
+   Host steps: setup → write → guess → reveal (3 steps). Points per team: first correct = c, each next = c × 2.
+   Player points: the team's points are split between the writer and everyone who answered correctly. */
+const CLUE_D = 2;
+const clueTeamPts = (k, c) => (k > 0 ? c + (k - 1) * c * CLUE_D : 0);
+const clueOn = g => g.phase === "clue" && g.clue;
+function clueCircles(g) { // all finished circles + the current one once its points are revealed
+  const list = arr(g.clueHistory);
+  if (clueOn(g) && g.clue.step === "reveal" && (g.clue.reveal || 0) >= 3) list.push(g.clue);
+  return list;
+}
+function clueTally(c, cluePts) { // → { team: { k, pts } }, per-player shares
+  const out = {}, share = {};
+  for (const team of ["red", "blue"]) {
+    const T = (c.teams || {})[team] || {};
+    const ok = Object.entries(c.answers || {}).filter(([, a]) => a.team === team && a.r === "ok").map(([id]) => id);
+    const pts = clueTeamPts(ok.length, cluePts);
+    out[team] = { k: ok.length, pts };
+    if (pts > 0) { const each = pts / (ok.length + 1); for (const id of [T.writer, ...ok]) if (id) share[id] = (share[id] || 0) + each; }
+  }
+  return { out, share };
+}
+// Answer check: case, spaces, articles and plural don't matter; one typo is OK for words of 5+ letters.
+function lev(a, b) {
+  const m = a.length, n = b.length; if (Math.abs(m - n) > 1) return 2;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; }
+  return prev[n];
+}
+const normWord = s => String(s || "").replace(/^\s*(a|an|the)\s+/i, "").toLowerCase().normalize("NFKD").replace(/[^a-z]/g, "").replace(/(es|s)$/, "");
+function answerMatches(answer, word) {
+  const A = normWord(answer), W = normWord(word);
+  if (!A || !W) return false;
+  return A === W || (W.length >= 5 && lev(A, W) <= 1);
+}
+// Clue rules: ≤ N words (joined words count separately), no CamelCase, no secret word or a part of it.
+function clueProblem(text, word, max) {
+  const t = String(text || "").trim();
+  if (!t) return "Write your clue.";
+  if (/[a-z][A-Z]/.test(t)) return "No CamelCase, please — put spaces between words.";
+  const n = t.split(/[\s\-_./\\+&,;:|]+/).filter(Boolean).length;
+  if (n > max) return `Too many words: ${n} / ${max}.`;
+  const w = String(word || "").toLowerCase().replace(/[^a-z]/g, ""), stem = w.slice(0, Math.max(3, w.length - 2));
+  for (const tok of t.toLowerCase().split(/[^a-z]+/).filter(Boolean)) {
+    if (tok.includes(stem) || (tok.length >= 4 && w.includes(tok)) || tok === w) return "Don't use the secret word or a part of it.";
+  }
+  return "";
+}
+const clueWordCount = text => String(text || "").trim().split(/[\s\-_./\\+&,;:|]+/).filter(Boolean).length;
+const clueSuspicious = text => String(text || "").split(/\s+/).some(tok => tok.replace(/[^A-Za-z]/g, "").length > 14);
+const cluePacks = c => PACK_IDS.filter(id => !(c.bans || {})[id]);
+function clueWriterDefault(players, team, givers, notId) {
+  const L = teamList(players, team).filter(id => id !== notId);
+  const fresh = L.filter(id => !givers.includes(id));
+  const pool = fresh.length ? fresh : L;
+  return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
+function newClueCircle(g, players, bans) {
+  const givers = arr(g.clueGivers);
+  return { step: "setup", reveal: 0, circle: arr(g.clueHistory).length + 1, bans: bans || {},
+    teams: { red: { writer: clueWriterDefault(players, "red", givers), topic: "any" }, blue: { writer: clueWriterDefault(players, "blue", givers), topic: "any" } },
+    answers: {} };
+}
+function pickClueOptions(g, c) {
+  const seen = new Set(usedWords(g)), thisGame = new Set(); // seen: this game + earlier games in this room
+  for (const R of arr(g.rounds)) for (const t of arr(R.turns)) for (const x of arr(t.log)) thisGame.add(String(x.w).toLowerCase());
+  for (const h of arr(g.clueHistory)) for (const T of Object.values(h.teams || {})) for (const w of arr(T.options)) thisGame.add(String(w).toLowerCase());
+  const taken = new Set();
+  const out = {};
+  for (const team of ["red", "blue"]) {
+    const T = c.teams[team]; const packs = T.topic !== "any" && PACKS[T.topic] && !(c.bans || {})[T.topic] ? [T.topic] : cluePacks(c);
+    const base = (packs.length ? packs : PACK_IDS).flatMap(id => PACKS[id].words).filter(w => canBeDrawn(w) && !thisGame.has(w.toLowerCase()) && !taken.has(w.toLowerCase()));
+    const fresh = base.filter(w => !seen.has(w.toLowerCase()));
+    const pool = fresh.length >= 2 ? fresh : base.length >= 2 ? base : packWords().filter(w => !taken.has(w.toLowerCase()));
+    const opts = shuffle(pool).slice(0, 2); opts.forEach(w => taken.add(w.toLowerCase()));
+    out[team] = opts;
+  }
+  return out;
+}
+const clueTx = fn => txGame(g => (clueOn(g) ? fn(g, g.clue) : undefined));
+const clueMsLeft = c => (c.endsAt || 0) - S.db.now();
+const clueExpired = c => (c.step === "write" || c.step === "guess") && clueMsLeft(c) <= 0;
+const myClueTeam = () => { const { me } = ctx(); return me?.team || null; };
+function clueGuessers(players, c, team) { return teamList(players, team).filter(id => id !== c.teams[team]?.writer); }
+function clueWriteDone(c) { return ["red", "blue"].every(t => c.teams[t]?.sent) || clueExpired(c); }
+function clueGuessDone(c, players) {
+  return clueExpired(c) || ["red", "blue"].every(t => clueGuessers(players, c, t).every(id => (c.answers || {})[id]));
+}
+// actions
+function clueBan(id) {
+  return clueTx((g, c) => {
+    if (c.step !== "setup") return;
+    const bans = { ...(c.bans || {}) };
+    if (bans[id]) delete bans[id]; else {
+      if (PACK_IDS.filter(x => !bans[x]).length <= 1) { toast("Keep at least one topic."); return; }
+      bans[id] = true;
+    }
+    c.bans = bans;
+    for (const t of ["red", "blue"]) if (c.teams[t].topic === id && bans[id]) c.teams[t].topic = "any";
+    return g;
+  });
+}
+const clueSetTeam = (team, patch) => clueTx((g, c) => { if (c.step !== "setup") return; c.teams[team] = { ...c.teams[team], ...patch }; return g; });
+function clueStartWrite() {
+  const { players, settings } = ctx();
+  return clueTx((g, c) => {
+    if (c.step !== "setup") return;
+    for (const t of ["red", "blue"]) {
+      const w = c.teams[t].writer;
+      if (!w || !players[w] || players[w].team !== t) c.teams[t].writer = clueWriterDefault(players, t, arr(g.clueGivers));
+    }
+    const opts = pickClueOptions(g, c);
+    for (const t of ["red", "blue"]) c.teams[t] = { ...c.teams[t], options: opts[t], word: null, clue: "", sent: false };
+    g.clueGivers = [...new Set([...arr(g.clueGivers), c.teams.red.writer, c.teams.blue.writer].filter(Boolean))];
+    c.step = "write"; c.endsAt = S.db.now() + (g.clueTime || settings.clueTime || 60) * 1000;
+    return g;
+  });
+}
+function clueChoose(w) {
+  const team = myClueTeam();
+  return clueTx((g, c) => {
+    const T = c.teams[team]; if (c.step !== "write" || !T || T.writer !== S.pid || T.sent || !arr(T.options).includes(w)) return;
+    T.word = w; return g;
+  });
+}
+function clueSend(auto) {
+  const team = myClueTeam(); const text = String(S.drafts.clue || "").trim().replace(/\s+/g, " ");
+  return clueTx((g, c) => {
+    const T = c.teams[team]; if (c.step !== "write" || !T || T.writer !== S.pid || T.sent) return;
+    if (!T.word) T.word = arr(T.options)[0];
+    const bad = clueProblem(text, T.word, g.clueWords || 5);
+    if (bad && !auto) return;
+    T.clue = bad ? "" : text; T.sent = true; return g;
+  });
+}
+function clueStartGuess() {
+  return clueTx((g, c) => {
+    if (c.step !== "write") return;
+    for (const t of ["red", "blue"]) { const T = c.teams[t]; if (!T.word) T.word = arr(T.options)[0] || "?"; if (!T.sent) { T.sent = true; T.clue = T.clue || ""; } }
+    c.step = "guess"; c.answers = {}; c.endsAt = S.db.now() + (g.guessTime || 60) * 1000;
+    return g;
+  });
+}
+function clueAnswer() {
+  const team = myClueTeam(); const a = String(S.drafts.guess || "").trim().slice(0, 40);
+  if (!a) return;
+  return clueTx((g, c) => {
+    if (c.step !== "guess" || !team || c.teams[team]?.writer === S.pid || (c.answers || {})[S.pid]) return;
+    if (clueMsLeft(c) < -4000) return;
+    c.answers = { ...(c.answers || {}), [S.pid]: { team, a, r: answerMatches(a, c.teams[team].word) ? "ok" : "no" } };
+    return g;
+  });
+}
+function clueNext() {
+  return clueTx((g, c) => {
+    if (c.step === "guess") { c.step = "reveal"; c.reveal = 1; return g; }
+    if (c.step === "reveal" && (c.reveal || 0) < 3) { c.reveal = (c.reveal || 0) + 1; return g; }
+  });
+}
+function clueToggle(pid) {
+  return clueTx((g, c) => {
+    if (c.step !== "reveal" || (c.reveal || 0) < 3) return;
+    const x = (c.answers || {})[pid]; if (!x) return;
+    const orig = x.o || x.r, r = x.r === "ok" ? "no" : "ok";
+    c.answers[pid] = { ...x, r, o: orig, edited: r !== orig };
+    return g;
+  });
+}
+function clueAnother() {
+  const { players } = ctx();
+  return clueTx((g, c) => {
+    if (c.step !== "reveal" || (c.reveal || 0) < 3) return;
+    g.clueHistory = [...arr(g.clueHistory), { ...c, endsAt: null }];
+    g.clue = newClueCircle(g, players, c.bans);
+    return g;
+  });
+}
+const clueFinish = () => clueTx((g, c) => {
+  if (c.step !== "reveal" || (c.reveal || 0) < 3) return;
+  g.clueHistory = [...arr(g.clueHistory), { ...c, endsAt: null }]; g.clue = null; g.phase = "over"; return g;
+});
+
 
 function balanceTeams(randomize) {
   const { players } = ctx();
@@ -966,6 +1193,28 @@ const ACTIONS = {
   "host-reset": () => { S.modal = { title: "Reset the game?", body: "Scores and answers will be cleared. Players and teams stay. Everyone returns to the lobby.", ok: "Reset game", action: "reset-confirm", danger: true }; render(); },
   "reset-confirm": () => { S.modal = null; render(); S.db.update(roomPath(), { game: { phase: "lobby", used: usedWords(ctx().g) }, draw: null, words: null, extraWords: null }); },
   "play-again": () => { S.modal = { title: "Play again?", body: "Everyone returns to the lobby with the same teams. You can shuffle teams and change settings there.", ok: "🔁 Play again", action: "reset-confirm" }; render(); },
+  "clue-ban": ds => { if (ctx().isHost) clueBan(ds.id); },
+  "clue-writer": ds => { if (ctx().isHost) clueSetTeam(ds.team, { writer: ds.pid }); },
+  "clue-roll": ds => { const { isHost, players, g } = ctx(); if (!isHost || !g.clue) return; const cur = g.clue.teams[ds.team]?.writer; const w = clueWriterDefault(players, ds.team, [], cur); if (w) clueSetTeam(ds.team, { writer: w }); },
+  "clue-topic": ds => { if (ctx().isHost) clueSetTeam(ds.team, { topic: ds.id }); },
+  "clue-start-write": () => { const { isHost, players } = ctx(); if (!isHost) return;
+    if (!teamList(players, "red").length || !teamList(players, "blue").length) return toast("Both teams need at least one player.");
+    S.drafts.clue = ""; clueStartWrite(); },
+  "clue-choose": ds => clueChoose(ds.w),
+  "clue-send": () => { document.getElementById("clue-in")?.blur(); clueSend(false); },
+  "clue-start-guess": () => { const { isHost, g } = ctx(); if (!isHost || !g.clue) return;
+    if (!clueWriteDone(g.clue)) { S.modal = { title: "Start guessing now?", body: "Not all clues are ready. A team without a clue gets no points this time.", ok: "Start guessing", action: "clue-start-guess-ok" }; return render(); }
+    clueStartGuess(); },
+  "clue-start-guess-ok": () => { S.modal = null; render(); clueStartGuess(); },
+  "clue-answer": () => { document.getElementById("guess-in")?.blur(); clueAnswer(); },
+  "clue-reveal": () => { const { isHost, g, players } = ctx(); if (!isHost || !g.clue) return;
+    if (g.clue.step === "guess" && !clueGuessDone(g.clue, players)) { S.modal = { title: "Reveal now?", body: "Not everyone has answered yet. Missing answers count as wrong.", ok: "Reveal", action: "clue-reveal-ok" }; return render(); }
+    clueNext(); },
+  "clue-reveal-ok": () => { S.modal = null; render(); clueNext(); },
+  "clue-toggle": ds => { if (ctx().isHost) clueToggle(ds.pid); },
+  "clue-another": () => { if (ctx().isHost) clueAnother(); },
+  "clue-finish": () => { if (!ctx().isHost) return; S.modal = { title: "Finish the game?", body: "The final scores and the winner will be shown.", ok: "🏆 Finish game", action: "clue-finish-ok" }; render(); },
+  "clue-finish-ok": () => { S.modal = null; render(); clueFinish(); },
   "modal-close": () => { S.modal = null; render(); },
   "modal-ok": () => { const a = S.modal?.action; if (a === "modal-close") { S.modal = null; render(); } else ACTIONS[a]?.({}); },
 };
@@ -989,7 +1238,7 @@ function header() {
 function rulesCards() {
   const cards = [
     { ic: ROUNDS.alias.icon, t: "Alias", p: "Explain the word without saying it or any part of it." },
-    { ic: ROUNDS.draw.icon, t: "Draw", p: "Draw the word — no letters, no talking. Your team guesses." },
+    { ic: ROUNDS.draw.icon, t: "Draw", p: "Draw the word — don't write it. Your team guesses." },
   ];
   return `<div class="rules">${cards.map(c => `<div class="rule"><div class="ic">${c.ic}</div><b>${c.t}</b><p>${c.p}</p></div>`).join("")}</div>`;
 }
@@ -1042,23 +1291,24 @@ function playerLi(id, p, isHost, hostId) {
 
 function settingsPanel() {
   const { settings: st, isHost, players } = ctx();
-  const draw = st.mode === "draw";
+  const draw = hasDraw(st.mode), clue = st.mode === "clue";
   const red = teamList(players, "red").length, blue = teamList(players, "blue").length;
   const n = Object.keys(players).length;
   const perTeam = Math.max(red, blue, Math.ceil(n / 2), 1);
   const turns = perTeam * 2;
   const mins = secs => Math.round(turns * (secs + 15) / 60);
-  const est = `Each round: everyone explains once → ${turns} turns (~${mins(st.timer)} min${draw ? `; drawing round ~${mins(st.drawTimer)} min` : ""}).`;
+  const est = `Each round: everyone explains once → ${turns} turns (~${mins(st.timer)} min${draw ? `; drawing round ~${mins(st.drawTimer)} min` : ""}${clue ? "; 🧩 One Clue ~5 min" : ""}).`;
   const uneven = red && blue && red !== blue ? `<p class="small muted" style="margin-top:6px">${TEAMS[red < blue ? "red" : "blue"].name} has fewer players, so ${Math.abs(red - blue) === 1 ? "one of them explains" : "some of them explain"} twice per round to keep it fair.</p>` : "";
   if (!isHost) {
     // Players only see a short read-only summary; the full panel is for the host.
     const pill = t => `<span class="pill">${t}</span>`;
     return `<div class="panel"><h2>Game rules</h2><div class="row">
-      ${pill(draw ? "💬 Alias + 🎨 Draw · 2 rounds" : "💬 Alias · 1 round")}
+      ${pill(clue ? "💬 Alias + 🎨 Draw + 🧩 One Clue · 3 rounds" : draw ? "💬 Alias + 🎨 Draw · 2 rounds" : "💬 Alias · 1 round")}
       ${pill(`⏱ ${st.timer}s to explain`)}
       ${draw ? pill(`🎨 ${st.drawTimer}s to draw`) : ""}
       ${draw && (st.drawPts || 1) > 1 ? pill(`🎨 ${st.drawPts} points per drawn word`) : ""}
       ${pill(`✗ ${st.skipLimit > 0 ? st.skipLimit : "Unlimited"} skip${st.skipLimit === 1 ? "" : "s"} per turn`)}
+      ${clue ? pill(`🧩 Clue: max ${st.clueWords} words · ${st.clueTime}s to write · ${st.guessTime}s to guess`) : ""}
     </div><p class="small muted" style="margin-top:10px">${est} Set by the host.</p>${uneven}</div>`;
   }
   const chip = (k, v, label) => `<button class="chip ${st[k] == v ? "on" : ""}" data-action="setting" data-k="${k}" data-v="${v}">${label}</button>`;
@@ -1067,11 +1317,16 @@ function settingsPanel() {
     <h2>Game settings</h2>
     <div class="set-row"><div class="h3">Game mode</div><div class="modes">
       ${mode("draw", "Alias + Draw", "2 rounds · 💬 explain, then 🎨 draw")}
+      ${mode("clue", "Alias + Draw + Clue", "3 rounds · 💬 → 🎨 → 🧩 One Clue")}
       ${mode("alias", "Alias", "1 round · 💬 explain only")}
     </div></div>
     <div class="set-row"><div class="h3">💬 Time to explain</div><div class="row">${[45, 60, 90].map(v => chip("timer", v, v + "s")).join("")}</div></div>
     ${draw ? `<div class="set-row"><div class="h3">🎨 Time to draw</div><div class="row">${[60, 90, 120].map(v => chip("drawTimer", v, v + "s")).join("")}</div></div>
     <div class="set-row"><div class="h3">🎨 Points per drawn word</div><div class="row">${[1, 2, 3].map(v => chip("drawPts", v, "×" + v)).join("")}</div></div>` : ""}
+    ${clue ? `<div class="set-row"><div class="h3">🧩 Words in a clue</div><div class="row">${[3, 4, 5, 6, 7].map(v => chip("clueWords", v, v)).join("")}</div></div>
+    <div class="set-row"><div class="h3">🧩 Time to write a clue</div><div class="row">${[45, 60, 90].map(v => chip("clueTime", v, v + "s")).join("")}</div></div>
+    <div class="set-row"><div class="h3">🧩 Time to guess</div><div class="row">${[45, 60, 90].map(v => chip("guessTime", v, v + "s")).join("")}</div></div>
+    <div class="set-row"><div class="h3">🧩 Points for a correct answer</div><div class="row">${[2, 3, 5].map(v => chip("cluePts", v, v)).join("")}</div></div>` : ""}
     <div class="set-row"><div class="h3">Skips per turn</div><div class="row">${[1, 2, 3, 5].map(v => chip("skipLimit", v, v)).join("")}${chip("skipLimit", 0, "∞")}</div></div>
     <div class="set-row"><div class="h3">Word packs · ${packWords().length} words</div><div class="row">${PACK_IDS.map(id => `<span class="pill">${PACKS[id].icon} ${PACKS[id].name}</span>`).join("")}</div></div>
     <p class="small muted">${est}</p>${uneven}
@@ -1114,9 +1369,10 @@ function viewLobby() {
         : `<div class="center muted">⏳ Waiting for the host to start…</div>`}
         <details class="howto"><summary>How to play</summary><ol>
           <li>Teams take turns. One player explains, their team guesses before the timer runs out.</li>
-          <li>${settings.mode === "draw" ? "Round 1: explain with words. Round 2: draw new words — no letters, no talking." : "Explain with words — never say the word or any part of it."}</li>
-          <li><b>Correct</b> = +1 point${settings.mode === "draw" && (settings.drawPts || 1) > 1 ? ` (${settings.drawPts} points in the Draw round)` : ""}. <b>Skip</b> = next word (limited per turn). Wrong button? Tell the host — they fix it right after the turn.</li>
+          <li>${hasDraw(settings.mode) ? "Round 1: explain with words. Round 2: draw new words. Don't write the secret word. You can only say Yes, No, Close." : "Explain with words — never say the word or any part of it."}</li>
+          <li><b>Correct</b> = +1 point${hasDraw(settings.mode) && (settings.drawPts || 1) > 1 ? ` (${settings.drawPts} points in the Draw round)` : ""}. <b>Skip</b> = next word (limited per turn). Wrong button? Tell the host — they fix it right after the turn.</li>
           <li>Everyone explains once per round. After each round the host checks the answers with everyone.</li>
+          ${settings.mode === "clue" ? `<li>Round 3 · 🧩 One Clue: one player per team writes a clue of up to ${settings.clueWords} words; teammates get one silent guess each. More correct answers = more points!</li>` : ""}
         </ol></details>
       </div>
     </div>
@@ -1283,7 +1539,8 @@ function viewWatch() {
 function viewReview() {
   const { g, isHost } = ctx();
   const turns = arr(curRound(g).turns); const last = (g.round || 1) >= (g.totalRounds || 1);
-  const next = !last ? ROUNDS.draw : null;
+  const nextKind = !last ? roundKind({ ...g, round: (g.round || 1) + 1 }) : null;
+  const next = nextKind ? ROUNDS[nextKind] : null;
   return `<div class="grid2">
     <div class="stack">
       <div class="panel center">
@@ -1295,14 +1552,172 @@ function viewReview() {
     </div>
     <div class="stack">
       ${scoreboard(g)}
-      ${next ? `<div class="round"><span class="ic">${next.icon}</span><div><b>Next: Round 2 · ${next.name}</b><p>${next.rule}${drawPtsNote(roundPts(g, 2))}</p></div></div>` : ""}
+      ${next ? `<div class="round"><span class="ic">${next.icon}</span><div><b>Next: Round ${(g.round || 1) + 1} · ${next.name}</b><p>${next.rule}${nextKind === "draw" ? drawPtsNote(roundPts(g, 2)) : ""}</p></div></div>` : ""}
       <div class="panel">${isHost
-        ? `<button class="btn gold lg wide" data-action="confirm-round">${last ? "🏆 Show the winner" : "✅ Confirm & start Round 2"}</button>
+        ? `<button class="btn gold lg wide" data-action="confirm-round">${last ? "🏆 Show the winner" : nextKind === "clue" ? "✅ Confirm & start One Clue" : `✅ Confirm & start Round ${(g.round || 1) + 1}`}</button>
            <p class="small muted center" style="margin-top:8px">After this, the answers are locked.</p>${hostBar(true)}`
-        : `<p class="center muted">⏳ ${last ? "The winner will be revealed after the check…" : "Round 2 starts after the check…"}</p>`}</div>
+        : `<p class="center muted">⏳ ${last ? "The winner will be revealed after the check…" : `Round ${(g.round || 1) + 1} starts after the check…`}</p>`}</div>
     </div>
   </div>`;
 }
+
+/* ---------- 🧩 One Clue views ---------- */
+function clueTimer(c) {
+  const total = (c.step === "write" ? ctx().g.clueTime : ctx().g.guessTime) || 60;
+  const ms = clueMsLeft(c), sec = Math.max(0, Math.ceil(ms / 1000));
+  return `<div class="clue-timer ${sec <= 10 ? "urgent" : ""}" data-cturgent><b data-ctimer>${sec}</b><span>sec</span>
+    <div class="bar"><i data-ctimerbar style="transform:scaleX(${clamp(ms / (total * 1000), 0, 1)})"></i></div></div>`;
+}
+function clueRules(g) {
+  return `<ol class="clue-rules">
+    <li>In each team, <b>one player</b> gets a secret word and writes a clue — <b>max ${g.clueWords || 5} words</b>.</li>
+    <li>Everyone else in the team types <b>one answer</b>. One try only — <b>guess silently, no talking!</b></li>
+    <li>Then we reveal both clues and all the answers. <b>More correct answers = more points!</b></li>
+  </ol>`;
+}
+function clueHead(g, c, sub) {
+  return `<div class="panel center clue-head">
+    <div class="h3">🧩 Round ${g.round || 3} of ${g.totalRounds || 3}${c.circle > 1 ? ` · Circle ${c.circle}` : ""}</div>
+    <h2 style="font-size:1.9rem;margin:4px 0">One Clue</h2>${sub ? `<p class="muted" style="margin:0">${sub}</p>` : ""}</div>`;
+}
+function clueTeamName(t) { return `${TEAMS[t].emoji} ${TEAMS[t].name}`; }
+function viewClueSetup(g, c) {
+  const { players, isHost } = ctx();
+  const topicName = id => (id === "any" ? "Any topic" : `${PACKS[id].icon} ${PACKS[id].name}`);
+  const teamBox = t => {
+    const T = c.teams[t] || {}; const L = teamList(players, t);
+    return `<div class="panel t-${t} clue-team">
+      <h3>${clueTeamName(t)}</h3>
+      <div class="h3">✍️ Clue writer</div>
+      ${isHost ? `<div class="row">${L.map(id => `<button class="chip ${T.writer === id ? "on" : ""}" data-action="clue-writer" data-team="${t}" data-pid="${id}">${esc(players[id].name)}</button>`).join("")}
+        <button class="chip" data-action="clue-roll" data-team="${t}" title="Random player">🎲</button></div>`
+      : `<p><b>${esc(pname(players, T.writer))}</b>${T.writer === S.pid ? " (you!)" : ""}</p>`}
+      <div class="h3" style="margin-top:10px">Topic</div>
+      ${isHost ? `<div class="row">${["any", ...cluePacks(c)].map(id => `<button class="chip ${T.topic === id ? "on" : ""}" data-action="clue-topic" data-team="${t}" data-id="${id}">${id === "any" ? "Any" : PACKS[id].icon + " " + PACKS[id].name}</button>`).join("")}</div>`
+      : `<p>${topicName(T.topic || "any")}</p>`}
+    </div>`;
+  };
+  return `${clueHead(g, c, isHost ? "Pick the clue writers and topics, explain the rules, then start." : "The host is setting up the round…")}
+    <div class="grid2">
+      <div class="stack">
+        <div class="panel"><h2>How it works</h2>${clueRules(g)}</div>
+        <div class="panel"><div class="h3">Topics${isHost ? " · tap to cross out" : ""}</div>
+          <div class="row">${PACK_IDS.map(id => isHost
+            ? `<button class="chip ${(c.bans || {})[id] ? "banned" : ""}" data-action="clue-ban" data-id="${id}">${PACKS[id].icon} ${PACKS[id].name}</button>`
+            : `<span class="pill ${(c.bans || {})[id] ? "banned" : ""}">${PACKS[id].icon} ${PACKS[id].name}</span>`).join("")}</div></div>
+      </div>
+      <div class="stack">
+        ${teamBox("red")}${teamBox("blue")}
+        ${scoreboard(g)}
+        <div class="panel">${isHost ? `<button class="btn gold lg wide" data-action="clue-start-write">▶ Start: write the clues</button>` : `<p class="center muted">⏳ Waiting for the host to start…</p>`}</div>
+      </div>
+    </div>`;
+}
+function clueHostPanel(g, c) {
+  const { isHost, players } = ctx(); if (!isHost) return "";
+  if (c.step === "write") {
+    const st = t => `${clueTeamName(t)}: ${c.teams[t]?.sent ? "✓ clue ready" : "✍️ writing…"}`;
+    const done = clueWriteDone(c);
+    return `<div class="panel host-panel"><div class="h3">👑 Host</div><p class="small">${st("red")}<br>${st("blue")}</p>
+      <button class="btn ${done ? "gold" : "ghost"} wide" data-action="clue-start-guess">▶ Start guessing</button></div>`;
+  }
+  if (c.step === "guess") {
+    const st = t => { const L = clueGuessers(players, c, t); return `${clueTeamName(t)}: ${L.filter(id => (c.answers || {})[id]).length}/${L.length} answered`; };
+    const done = clueGuessDone(c, players);
+    return `<div class="panel host-panel"><div class="h3">👑 Host</div><p class="small">${st("red")}<br>${st("blue")}</p>
+      <button class="btn ${done ? "gold" : "ghost"} wide" data-action="clue-reveal">▶ Reveal</button></div>`;
+  }
+  return "";
+}
+function viewClueWrite(g, c) {
+  const { players } = ctx(); const team = myClueTeam(); const T = team ? c.teams[team] : null;
+  let main;
+  if (T && T.writer === S.pid) {
+    if (T.sent) main = `<div class="panel center"><div style="font-size:2.4rem">✓</div><h2>Clue sent!</h2>
+        <p class="clue-big">“${esc(T.clue || "—")}”</p><p class="muted">Your word: <b>${esc(T.word)}</b>. Wait for your team.</p></div>`;
+    else if (!T.word) main = `<div class="panel center"><h2>Choose your word</h2><p class="muted">Only you can see these.</p>
+        <div class="opts">${arr(T.options).map(w => `<button class="opt" data-action="clue-choose" data-w="${esc(w)}">${esc(w)}</button>`).join("")}</div></div>`;
+    else {
+      const max = g.clueWords || 5; const draft = S.drafts.clue || ""; const bad = draft.trim() ? clueProblem(draft, T.word, max) : "";
+      main = `<div class="panel center"><div class="h3">Your secret word</div><div class="clue-word">${esc(T.word)}</div>
+        <form data-submit="clue-send" class="clue-form">
+          <input id="clue-in" data-model="clue" maxlength="80" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Your clue (max ${max} words)" value="${esc(draft)}">
+          <div class="clue-meta"><span class="${clueWordCount(draft) > max ? "bad" : ""}">${clueWordCount(draft)} / ${max} words</span>${bad ? `<span class="bad">${esc(bad)}</span>` : ""}</div>
+          <button class="btn gold lg wide" type="submit" ${!draft.trim() || bad ? "disabled" : ""}>Send</button>
+        </form></div>`;
+    }
+  } else {
+    const w = T ? pname(players, T.writer) : "";
+    main = `<div class="panel center"><div style="font-size:2.4rem">✍️</div>
+      <h2>${T ? `${esc(w)} is writing a clue for your team…` : "The clue writers are writing…"}</h2>
+      <p class="muted">${T?.sent ? "✓ The clue is ready!" : "Get ready to guess — one try each, no talking."}</p></div>`;
+  }
+  return `${clueHead(g, c, "Step 1 · Write the clues")}
+    <div class="grid2"><div class="stack">${main}</div>
+    <div class="stack">${clueTimer(c)}${clueHostPanel(g, c)}${scoreboard(g)}</div></div>`;
+}
+function viewClueGuess(g, c) {
+  const { players } = ctx(); const team = myClueTeam(); const T = team ? c.teams[team] : null;
+  let main;
+  if (!T) main = `<div class="panel center muted">👀 The teams are guessing…</div>`;
+  else if (T.writer === S.pid) {
+    const L = clueGuessers(players, c, team);
+    main = `<div class="panel center"><div class="h3">Your clue</div><p class="clue-big">“${esc(T.clue || "—")}”</p>
+      <p class="muted">Your team is guessing… <b>${L.filter(id => (c.answers || {})[id]).length}/${L.length}</b> answered</p></div>`;
+  } else {
+    const mine = (c.answers || {})[S.pid];
+    main = `<div class="panel center"><div class="h3">${esc(pname(players, T.writer))}'s clue</div>
+      <p class="clue-big">${T.clue ? `“${esc(T.clue)}”` : "No clue this time 😶"}</p>
+      ${mine ? `<p class="locked">✓ Your answer is locked: <b>${esc(mine.a)}</b></p>`
+      : `<form data-submit="clue-answer" class="clue-form">
+          <input id="guess-in" data-model="guess" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Your answer — one try!" value="${esc(S.drafts.guess || "")}">
+          <button class="btn gold lg wide" type="submit">Send</button></form>`}
+      <p class="small muted" style="margin-top:10px">🤫 Guess silently — no talking!</p></div>`;
+  }
+  return `${clueHead(g, c, "Step 2 · Guess the word")}
+    <div class="grid2"><div class="stack">${main}</div>
+    <div class="stack">${clueTimer(c)}${clueHostPanel(g, c)}${scoreboard(g)}</div></div>`;
+}
+function viewClueReveal(g, c) {
+  const { players, isHost } = ctx(); const step = c.reveal || 1;
+  const { out } = clueTally(c, g.cluePts || 2);
+  const half = t => {
+    const T = c.teams[t] || {}; const ans = clueGuessers(players, c, t).map(id => [id, (c.answers || {})[id]]);
+    for (const [id, a] of Object.entries(c.answers || {})) if (a.team === t && !ans.some(([x]) => x === id)) ans.push([id, a]);
+    return `<div class="panel t-${t} clue-half">
+      <div class="sum-head"><span>${clueTeamName(t)}</span>${step >= 3 ? `<span class="sum-pts pop" data-key="cp-${t}-${out[t].pts}">+${out[t].pts}</span>` : ""}</div>
+      <div class="h3">✍️ ${esc(pname(players, T.writer))}'s clue</div>
+      <p class="clue-big">${T.clue ? `“${esc(T.clue)}”` : "No clue 😶"}${isHost && clueSuspicious(T.clue) ? ` <span title="Very long word — check the rules">⚠️</span>` : ""}</p>
+      ${step >= 3 ? `<div class="clue-answer-word">The word: <b>${esc(T.word || "?")}</b></div>` : ""}
+      ${step >= 2 ? `<div class="ans-list">${ans.map(([id, a]) => {
+        const name = esc(pname(players, id));
+        if (!a) return `<div class="ans none" data-key="an-${id}"><span>${name}</span><i>— no answer</i></div>`;
+        const mark = step >= 3 ? (a.r === "ok" ? "✓" : "✗") : "";
+        const cls = `ans ${step >= 3 ? (a.r === "ok" ? "ok" : "no") : ""}`;
+        const inner = `<span>${name}</span><b>${mark} ${esc(a.a)}${a.edited ? " ✏️" : ""}</b>`;
+        return isHost && step >= 3 ? `<button class="${cls} tog" data-action="clue-toggle" data-pid="${id}" data-key="an-${id}" title="Switch ✓ / ✗">${inner}</button>` : `<div class="${cls}" data-key="an-${id}">${inner}</div>`;
+      }).join("") || `<p class="muted small">No guessers in this team.</p>`}</div>` : ""}
+      ${step >= 3 ? `<p class="small muted">${out[t].k} correct</p>` : ""}
+    </div>`;
+  };
+  const labels = { 1: "▶ Next: show the answers", 2: "▶ Next: show the words" };
+  return `${clueHead(g, c, step < 3 ? "Step 3 · The big reveal" : isHost ? "Tap an answer to switch ✓ / ✗ (e.g. if a clue broke the rules)." : "Do you agree? Tell the host!")}
+    <div class="clue-split">${half("red")}${half("blue")}</div>
+    <div class="grid2" style="margin-top:16px"><div class="stack">${scoreboard(g)}</div>
+    <div class="panel">${isHost ? (step < 3 ? `<button class="btn gold lg wide" data-action="clue-reveal">${labels[step]}</button>`
+      : `<button class="btn gold lg wide" data-action="clue-finish">🏆 Finish game</button>
+         <button class="btn ghost wide" style="margin-top:10px" data-action="clue-another">🔁 Play another</button>`)
+      : `<p class="center muted">⏳ The host reveals step by step…</p>`}</div></div>`;
+}
+function viewClue() {
+  const { g } = ctx(); const c = g.clue || {};
+  const dk = `${c.circle}-${c.step}`; if (S.clueDraftKey !== dk) { S.clueDraftKey = dk; S.drafts.clue = ""; S.drafts.guess = ""; }
+  if (c.step === "write") return viewClueWrite(g, c);
+  if (c.step === "guess") return viewClueGuess(g, c);
+  if (c.step === "reveal") return viewClueReveal(g, c);
+  return viewClueSetup(g, c);
+}
+
 
 function confetti() {
   const cols = ["#f4c25b", "#ef4b5c", "#21b47d", "#4aa3ff", "#ffffff"];
@@ -1315,7 +1730,7 @@ function confetti() {
 function viewOver() {
   const { g, players, isHost } = ctx(); const { sc, pts } = tally(g); const r = sc.red || 0, b = sc.blue || 0;
   const win = r === b ? null : r > b ? "red" : "blue";
-  const mvp = Object.entries(pts).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const mvp = Object.entries(pts).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id, n]) => [id, Math.round(n)]);
   return `${confetti()}<div class="panel winner ${win ? "t-" + win : ""}">
       <div class="trophy">${win ? "🏆" : "🤝"}</div>
       <h1>${win ? `${TEAMS[win].name} wins!` : "It's a tie!"}</h1>
@@ -1323,7 +1738,7 @@ function viewOver() {
     </div>
     <div class="grid2" style="margin-top:20px">
       <div class="stack">${scoreboard(g)}</div>
-      <div class="panel"><h2>⭐ Top explainers</h2>
+      <div class="panel"><h2>⭐ ${g.mode === "clue" ? "Top players" : "Top explainers"}</h2>
         ${mvp.length ? `<ol class="mvp">${mvp.map(([id, n], i) => `<li>${["🥇", "🥈", "🥉", "4.", "5."][i]} ${avatar(players[id]?.name || "?")} ${esc(players[id]?.name || "Former player")}<b>${n}</b></li>`).join("")}</ol>` : `<p class="muted">No points scored.</p>`}
         ${isHost ? `<button class="btn gold lg wide" style="margin-top:16px" data-action="play-again">🔁 Play again</button>` : `<p class="small muted" style="margin-top:14px">The host can start a new game.</p>`}
       </div>
@@ -1362,6 +1777,7 @@ function view() {
     case "between": return { key: "between", html: viewBetween() };
     case "turn": return g.explainer === S.pid ? { key: "explain", html: viewExplainer() } : { key: "watch", html: viewWatch() };
     case "review": return { key: "review", html: viewReview() };
+    case "clue": return { key: "clue-" + (g.clue?.step || "setup"), html: viewClue() };
     case "over": return { key: "over", html: viewOver() };
     default: return { key: "lobby", html: viewLobby() };
   }
@@ -1401,6 +1817,7 @@ function tick() {
   const off = hostOffline(); if (off !== S.lastHostOff) { S.lastHostOff = off; render(); }
 
   const { g, isHost } = ctx();
+  if (g.phase === "clue") return clueTick(g);
   if (g.phase !== "turn") return;
   const t = timerState(g); const ms = remainingMs(g);
   document.querySelectorAll("[data-timer]").forEach(el => { if (el.textContent !== String(t.sec)) el.textContent = t.sec; });
@@ -1414,6 +1831,21 @@ function tick() {
   if (ms <= -grace && S.endRequested !== g.turnId) {
     S.endRequested = g.turnId;
     endTurn(g.turnId, "time");
+  }
+}
+
+function clueTick(g) {
+  const c = g.clue; if (!c || (c.step !== "write" && c.step !== "guess")) return;
+  const ms = clueMsLeft(c), sec = Math.max(0, Math.ceil(ms / 1000)), total = (c.step === "write" ? g.clueTime : g.guessTime) || 60;
+  document.querySelectorAll("[data-ctimer]").forEach(el => { if (el.textContent !== String(sec)) el.textContent = sec; });
+  document.querySelectorAll("[data-ctimerbar]").forEach(el => { el.style.transform = `scaleX(${clamp(ms / (total * 1000), 0, 1)})`; });
+  document.querySelectorAll("[data-cturgent]").forEach(el => el.classList.toggle("urgent", sec <= 10));
+  const key = `${c.circle}-${c.step}`;
+  if (ms <= 0 && S.clueExpiredKey !== key) {
+    S.clueExpiredKey = key; render(); // host buttons light up
+    const team = myClueTeam(); const T = team && c.teams[team];
+    if (c.step === "write" && T && T.writer === S.pid && !T.sent) clueSend(true); // time's up: send what's typed (if it follows the rules)
+    if (c.step === "guess" && T && T.writer !== S.pid && !(c.answers || {})[S.pid] && String(S.drafts.guess || "").trim()) clueAnswer();
   }
 }
 
@@ -1431,7 +1863,7 @@ function bindEvents() {
   document.addEventListener("input", e => {
     const el = e.target, m = el.dataset?.model; if (!m) return;
     if (m === "code") { const v = el.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4); if (el.value !== v) el.value = v; S.drafts.code = v; }
-    else S.drafts[m] = el.value;
+    else { S.drafts[m] = el.value; if (m === "clue") render(); }
     if (S.error && (m === "name" || m === "code")) { S.error = ""; render(); }
   });
   // Drawing (explainer only, Draw round)
