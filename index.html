@@ -106,7 +106,7 @@ textarea.input{min-height:110px;resize:vertical}
 .home-card{max-width:560px;margin:0 auto}
 .or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.8rem;font-weight:700;letter-spacing:1px;margin:18px 0}
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
-.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:900px;margin:30px auto 0}
+.rules{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:600px;margin:30px auto 0}
 @media (max-width:700px){.rules{grid-template-columns:1fr}}
 .rule{padding:18px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
 .rule .ic{font-size:1.6rem}.rule b{display:block;margin:6px 0 4px;font-family:var(--display);font-size:1.1rem}
@@ -154,6 +154,8 @@ textarea.input{min-height:110px;resize:vertical}
 .mywords{display:flex;flex-wrap:wrap;gap:8px}
 .wchip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.08);font-weight:600;font-size:.92rem;animation:pop .35s ease both}
 .wchip.ok{background:rgba(33,180,125,.18);color:#c9f7e4}
+.nw{white-space:nowrap}
+.wchip.time{background:rgba(244,194,91,.14);color:#f6dba0}
 .wchip.skip{background:rgba(255,255,255,.06);color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.35)}
 @keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
 
@@ -253,6 +255,33 @@ textarea.input{min-height:110px;resize:vertical}
 .confetti i{position:absolute;top:-20px;width:9px;height:14px;border-radius:2px;animation:conf linear infinite}
 @keyframes conf{to{transform:translate3d(var(--dx),110vh,0) rotate(720deg)}}
 
+/* Drawing */
+.draw-word{text-align:center;font-size:1.05rem;padding:8px 14px;border-radius:14px;background:linear-gradient(160deg,#fffdf6,#f4ead3);color:#1b2142;font-weight:600;animation:dealIn .35s ease both}
+.draw-word b{font-family:var(--display);font-size:1.35rem}
+.canvas-wrap{width:100%;max-width:min(720px,max(300px,calc((100vh - 420px) * 4 / 3)));margin:0 auto;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:#fffdf6;box-shadow:0 18px 50px rgba(0,0,0,.4),inset 0 0 0 3px rgba(224,161,47,.45);touch-action:none}
+.canvas-wrap canvas{display:block;width:100%;height:100%;touch-action:none}
+.canvas-wrap.mine canvas{cursor:crosshair}
+.tools{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+.tools .chip{padding:7px 12px;font-size:.85rem}
+.tools{align-items:center}
+.swatches,.sizes{display:flex;gap:5px;align-items:center}
+.sw{width:26px;height:26px;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px rgba(255,255,255,.25);transition:transform .15s}
+.sw.on{box-shadow:0 0 0 2px #0b1430,0 0 0 4px var(--gold);transform:scale(1.1)}
+.tools .chip.sz{width:36px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.chip.sz i{display:block;border-radius:50%;background:currentColor}
+@media (max-width:600px){.tools .chip .lbl{display:none}.sw{width:24px;height:24px}.swatches,.sizes{gap:4px}.tools .chip{padding:7px 10px}}
+.draw-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.draw-head .draw-word{flex:1;min-width:200px}
+.ex.drawing{gap:10px;min-height:0}
+.ex.drawing .ex-btns .btn{padding:14px 12px;font-size:1.1rem}
+.ex.drawing .ex-meta{display:none}
+.btn.endmine{padding:6px 14px;font-size:.85rem}
+.watch .canvas-wrap{max-width:min(720px,max(300px,calc((100vh - 380px) * 4 / 3)))}
+.watch-timer{font-family:var(--display);font-weight:800;font-size:2.2rem;line-height:1;margin:4px 0 8px}
+.watch-timer.urgent{color:var(--red);animation:pulse 1s ease infinite}
+.wchip.tog{cursor:pointer;border:1px dashed rgba(255,255,255,.25)}
+.wchip.tog:hover{filter:brightness(1.2)}
+
 /* Team pick banner */
 .teampick{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:16px;margin-bottom:18px;background:rgba(244,194,91,.1);border:1px solid rgba(244,194,91,.4)}
 
@@ -323,28 +352,25 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const RING_C = 2 * Math.PI * 54;
 
 const TEAMS = { red: { name: "Team Santa", short: "Santa", emoji: "🎅" }, blue: { name: "Team Frost", short: "Frost", emoji: "❄️" } };
-/* ---------- Word packs (simple single words) — used by 🎲 Suggest and the host's "+10 random words" ---------- */
+/* ---------- Word packs (simple single words for B1–B2 English) — the game deck is built from the chosen packs ---------- */
 const PACKS = {
   newyear: { name: "New Year & Winter", icon: "🎄", words: `Snowman Snowflake Snowball Reindeer Santa Gift Candle Fireplace Star Angel Bell Igloo Penguin Scarf Sweater Boots Skates Snowboard Sled Winter Midnight Countdown Fireworks Champagne Party Confetti Calendar Kiss Dance Costume Mask Cookie Gingerbread Candy Chocolate Cocoa Turkey Elf Blanket Pajamas Sauna Balloon Shovel Lights Tree Hat Gloves Wrapping Postcard Letter Moon Hockey Mountain Cabin Marshmallow Fairy Magic Hug Cake Cheese Salad Orange Socks Fridge Hangover Nap Ski Snowstorm Ice Coat Toy Bear Shopping Dinner Cards Speech Dress Makeup`.split(" ") },
   movies: { name: "Movies & Pop culture", icon: "🎬", words: `Titanic Shrek Batman Superman Spiderman Hulk Zombie Vampire Frankenstein Dinosaur Alien Pirate Wizard Witch Ninja Cowboy Sheriff Detective Spy Dragon Unicorn Mermaid Ghost Mummy Werewolf Godzilla Rocky Rambo Terminator Matrix Avatar Frozen Cinderella Pinocchio Aladdin Tarzan Simba Pikachu Mario Barbie Joker Godfather Gladiator Jaws Bambi Dumbo Minions Hogwarts Yoda Lightsaber Oscar Hollywood Popcorn Stuntman Camera Netflix TikTok Selfie Meme Emoji Shakira Elvis Sherlock Hobbit Tetris Minecraft Lego Karaoke Disco Rockstar Paparazzi Anime Headphones Guitar Drums Piano Autograph Fan Tattoo Clown Circus Zorro Thor Hercules Nemo Garfield Rapunzel Mickey Cleopatra Ironman Mowgli Chaplin Astronaut Spaceship DJ Moonwalk Viking Gorilla Panda Knight`.split(" ") },
-  office: { name: "IT & Office life", icon: "💻", words: `Laptop Keyboard Mouse Monitor Printer Deadline Meeting Coffee Password WiFi Bug Email Zoom Presentation Boss Intern Recruiter Interview Resume Salary Vacation Overtime Friday Standup Sprint Cloud Database Developer Designer Hacker Virus Reboot Screenshot Mute Desk Chair Elevator Kitchen Snack Pizza Python Burnout Badge Stapler Whiteboard Sticker Battery Download Upload Brainstorm Lunch Timesheet Calculator Handshake Folder Cable Applause Rocket Like Joystick Chart Target Tie Bitcoin Robot Copy-paste Wave`.split(" ") },
+  office: { name: "IT & Office life", icon: "💻", words: `Laptop Keyboard Mouse Monitor Printer Deadline Meeting Coffee Password WiFi Email Zoom Presentation Boss Intern Recruiter Interview Resume Salary Vacation Overtime Friday Standup Sprint Cloud Database Developer Designer Hacker Virus Reboot Screenshot Mute Desk Chair Elevator Kitchen Snack Pizza Python Burnout Badge Stapler Whiteboard Sticker Battery Download Upload Brainstorm Lunch Timesheet Calculator Handshake Folder Cable Applause Rocket Like Joystick Chart Target Tie Bitcoin Robot Copy-paste Wave`.split(" ") },
+  animals: { name: "Animals", icon: "🐾", words: `Dog Cat Horse Cow Pig Sheep Goat Chicken Duck Rabbit Lion Tiger Elephant Giraffe Zebra Monkey Kangaroo Koala Camel Hippo Rhino Crocodile Snake Frog Turtle Snail Spider Butterfly Bee Ant Ladybug Fish Shark Whale Dolphin Octopus Crab Owl Eagle Parrot Flamingo Peacock Swan Squirrel Hedgehog Fox Hamster Raccoon Beaver Donkey Ostrich Worm Llama`.split(" ") },
+  jobs: { name: "Jobs", icon: "👷", words: `Doctor Nurse Dentist Teacher Pilot Chef Waiter Farmer Firefighter Policeman Builder Plumber Electrician Mechanic Driver Sailor Painter Writer Journalist Judge Cashier Postman Hairdresser Baker Cleaner Gardener Vet Scientist Secretary Librarian Lifeguard Babysitter Model Coach Referee Translator Courier Miner Tailor Zookeeper Comedian Receptionist Blogger`.split(" ") },
 };
 (() => { const seen = new Set(); for (const pk of Object.values(PACKS)) pk.words = pk.words.filter(w => { const k = w.toLowerCase(); if (!w || seen.has(k)) return false; seen.add(k); return true; }); })();
 const PACK_IDS = Object.keys(PACKS);
 const activePacks = st => { const ids = String(st.packs || PACK_IDS.join(",")).split(",").filter(id => PACKS[id]); return ids.length ? ids : PACK_IDS; };
-// Random words from the chosen packs that aren't already in the bowl / in `extraUsed`.
-function randomPackWords(n, extraUsed = []) {
-  const { d, settings } = ctx();
-  const used = new Set([...buildPool(d), ...extraUsed].map(w => String(w).toLowerCase()));
-  const candidates = activePacks(settings).flatMap(id => PACKS[id].words).filter(w => !used.has(w.toLowerCase()));
-  return shuffle(candidates).slice(0, n);
-}
+const packWords = st => activePacks(st).flatMap(id => PACKS[id].words);
 
 const ROUNDS = {
-  1: { name: "Describe", icon: "💬", rule: "Use any words except the word itself or any part of it — no spelling, no “sounds like”." },
-  2: { name: "Charades", icon: "🎭", rule: "No words, no sounds — act it out with gestures only." },
-  3: { name: "One Word", icon: "☝️", rule: "Say exactly ONE word — not the word itself or any part of it. Gestures are allowed!" },
+  alias: { name: "Alias", icon: "💬", rule: "Explain the word without saying it or any part of it — no spelling, no “sounds like”." },
+  draw: { name: "Draw", icon: "🎨", rule: "Draw it! No letters, numbers or talking — your team guesses from the picture." },
 };
+const roundKind = g => (g.mode === "draw" && (g.round || 1) === 2 ? "draw" : "alias");
+const roundInfo = g => ROUNDS[roundKind(g)];
 
 /* ---------- Safe storage (some embedded/private browsers block it) ---------- */
 function safeStore(kind) {
@@ -425,11 +451,12 @@ class FirebaseBackend {
 
 /* ---------- State ---------- */
 const S = {
-  db: null, demo: !IS_CONFIGURED, code: null, pid: null, data: undefined, unsub: null, unpresence: null,
-  drafts: { name: LS.getItem("jb_name") || "", code: "", words: [], bulk: "" },
-  invited: false, editingWords: false, busy: false, loading: false, error: "", notice: "", fatal: "",
+  db: null, demo: !IS_CONFIGURED, code: null, pid: null, data: undefined, unsub: null, unpresence: null, sig: null,
+  drafts: { name: LS.getItem("jb_name") || "", code: "" },
+  invited: false, busy: false, loading: false, error: "", notice: "", fatal: "",
   toast: null, modal: null, endRequested: null, lastPhase: null, lastTurnId: null, lastBeep: null,
   muted: LS.getItem("jb_muted") === "1",
+  tool: "pen", color: "k", size: 7, stroke: null, strokeN: 0, flushT: null, clearedKey: null,
 };
 const idStore = () => (S.demo ? SS : LS); // demo: one player per tab
 
@@ -438,32 +465,55 @@ function ctx() {
   const g = d.game || { phase: "lobby" };
   const players = {};
   for (const [id, p] of Object.entries(d.players || {})) if (p && p.name) players[id] = p;
-  const settings = { timer: 60, wordsPerPlayer: 2, mode: "single", skipLimit: 3, packs: PACK_IDS.join(","), ...(d.settings || {}) };
+  const settings = { timer: 60, drawTimer: 90, skipLimit: 3, mode: "draw", packs: PACK_IDS.join(","), ...(d.settings || {}) };
+  if (settings.mode !== "alias" && settings.mode !== "draw") settings.mode = "draw"; // rooms from older versions
   return { d, g, players, me: players[S.pid], settings, isHost: d.meta?.hostId === S.pid, hostId: d.meta?.hostId };
 }
 const teamList = (players, team) => Object.entries(players)
   .filter(([, p]) => (team ? p.team === team : !p.team))
   .sort((a, b) => (a[1].joinedAt || 0) - (b[1].joinedAt || 0)).map(([id]) => id);
-function nextExplainer(players, g, team) {
-  const list = teamList(players, team); if (!list.length) return null;
-  const i = list.indexOf((g.last || {})[team]);
-  return list[(i + 1) % list.length];
+
+// Turn order for one round: teams alternate and everyone explains once.
+// The smaller team's players repeat (from the top of its list) so both teams get the same number of turns;
+// in the next round the repeat moves on to other people.
+function buildQueue(players, startTeam, round) {
+  const lists = { red: teamList(players, "red"), blue: teamList(players, "blue") };
+  const n = Math.max(lists.red.length, lists.blue.length); const q = [];
+  for (let i = 0; i < n; i++) for (const team of [startTeam, other(startTeam)]) {
+    const L = lists[team]; if (!L.length) continue;
+    q.push({ team, pid: L[(i + (round - 1) * n) % L.length] });
+  }
+  return q;
+}
+const curRound = g => arr(g.rounds)[(g.round || 1) - 1] || {};
+// Who explains a queue slot: the queued player if still in that team, otherwise the teammate who has explained least this round.
+function pickForSlot(g, players, slot, exclude) {
+  const ok = id => id && players[id] && players[id].team === slot.team && id !== exclude;
+  if (ok(slot.pid)) return slot.pid;
+  const done = {}; for (const t of arr(curRound(g).turns)) done[t.pid] = (done[t.pid] || 0) + 1;
+  const list = teamList(players, slot.team).filter(id => id !== exclude).sort((a, b) => (done[a] || 0) - (done[b] || 0));
+  return list[0] || null;
+}
+function setSlot(g, players) {
+  const slot = arr(g.queue)[g.turnIdx || 0]; if (!slot) return;
+  g.turnTeam = slot.team; g.explainer = pickForSlot(g, players, slot);
+}
+// The score is never stored: it is counted from the list of answers, so host corrections update it automatically.
+function tally(g) {
+  const sc = { red: 0, blue: 0 }, pts = {};
+  const add = (team, pid, log) => { for (const x of arr(log)) if (x.r === "ok") { sc[team] = (sc[team] || 0) + 1; pts[pid] = (pts[pid] || 0) + 1; } };
+  for (const r of arr(g.rounds)) for (const t of arr(r.turns)) add(t.team, t.pid, t.log);
+  if (g.phase === "turn") add(g.turnTeam, g.explainer, g.log);
+  return { sc, pts };
 }
 // Skips left this turn (Infinity when unlimited). Limit is frozen into the game at turn start.
 const skipsLeft = g => { const lim = g.skipLimit ?? 3; return lim > 0 ? Math.max(0, lim - arr(g.log).filter(x => x.r !== "ok").length) : Infinity; };
 const remainingMs = g => (g.turnEndsAt || 0) - S.db.now();
-const cardsLeft = g => arr(g.deck).length + (g.current ? 1 : 0);
-const roundInfo = g => ROUNDS[g.round || 1] || ROUNDS[1];
+const turnLabel = g => { const n = arr(g.queue).length; return `Turn ${Math.min((g.turnIdx || 0) + 1, n)} of ${n}`; };
 const pname = (players, id) => players[id]?.name || "Someone";
 const roomPath = (p = "") => `rooms/${S.code}${p ? "/" + p : ""}`;
 const inviteLink = () => `${location.origin}${location.pathname}?room=${S.code}`;
-function buildPool(d) {
-  const seen = new Set(), pool = [];
-  const add = w => { w = cleanWord(w); const k = w.toLowerCase(); if (w && !seen.has(k)) { seen.add(k); pool.push(w); } };
-  for (const words of Object.values(d.words || {})) arr(words).forEach(add);
-  arr(d.extraWords).forEach(add);
-  return pool;
-}
+const drawKey = g => `${g.turnId}-${hash(g.current || "")}-${arr(g.log).length}`; // one fresh canvas per card
 
 /* ---------- Sound ---------- */
 let actx;
@@ -499,7 +549,7 @@ async function createRoom() {
     const pid = uid(); const now = S.db.now();
     await S.db.set(`rooms/${code}`, {
       meta: { hostId: pid, createdAt: now },
-      settings: { timer: 60, wordsPerPlayer: 2, mode: "single", skipLimit: 3, packs: PACK_IDS.join(",") },
+      settings: { timer: 60, drawTimer: 90, skipLimit: 3, mode: "draw", packs: PACK_IDS.join(",") },
       players: { [pid]: { name, joinedAt: now, online: true } },
       game: { phase: "lobby" },
     });
@@ -534,7 +584,14 @@ function enterRoom(code, pid) {
   S.lastPhase = null; S.lastTurnId = null;
   idStore().setItem("jb_pid_" + code, pid);
   setUrl("?room=" + code);
-  S.unsub = S.db.subscribe(roomPath(), v => { S.data = v; onData(); render(); });
+  S.sig = null;
+  S.unsub = S.db.subscribe(roomPath(), v => {
+    // Drawing strokes change many times a second: repaint only the canvas unless something else changed.
+    const sig = JSON.stringify(v ? { ...v, draw: null } : v);
+    S.data = v;
+    if (sig === S.sig) { paintCanvas(); return; }
+    S.sig = sig; onData(); render();
+  });
   S.unpresence = S.db.presence(roomPath(`players/${pid}`));
   keepAwake();
   render();
@@ -555,12 +612,11 @@ function onData() {
   const { g, me } = ctx();
   if (!me) { idStore().removeItem("jb_pid_" + S.code); return leaveRoom("You were removed from the room."); }
   if (g.phase !== S.lastPhase) {
-    if (g.phase === "submit") { const mine = arr(S.data.words?.[S.pid]); S.drafts.words = [...mine]; S.editingWords = false; }
     if (g.phase === "turn" && g.explainer === S.pid && S.lastPhase) sound("start");
     if (S.lastPhase === "turn") sound("end"); // turn is over — everyone hears it
     S.lastPhase = g.phase;
   }
-  if (g.phase === "turn" && g.turnId !== S.lastTurnId) { S.lastTurnId = g.turnId; S.lastBeep = null; }
+  if (g.phase === "turn" && g.turnId !== S.lastTurnId) { S.lastTurnId = g.turnId; S.lastBeep = null; S.tool = "pen"; S.stroke = null; }
 }
 
 /* ---------- Host safety: hand over / take over the host role ---------- */
@@ -599,18 +655,42 @@ async function txGame(fn) {
   } catch (e) { console.error(e); toast("Connection problem — please try again."); }
 }
 
+// Next card from the deck. Words never repeat within a game; only if the chosen packs run out
+// mid-round is the deck refilled with words not yet played in THIS round.
+function drawCard(g) {
+  let deck = arr(g.deck);
+  if (!deck.length) {
+    const used = new Set(arr(curRound(g).turns).flatMap(t => arr(t.log).map(x => String(x.w).toLowerCase())));
+    for (const x of arr(g.log)) used.add(String(x.w).toLowerCase());
+    deck = shuffle(packWords(ctx().settings).filter(w => !used.has(w.toLowerCase())));
+  }
+  if (!deck.length) { g.deck = []; return null; }
+  const w = deck.pop(); // the deck is shuffled; words from earlier games in this room sit at the bottom
+  g.deck = deck; return w;
+}
+
+// Every word shown in this game (guessed, skipped or unfinished) + words remembered from earlier games in this room.
+function usedWords(g) {
+  const set = new Set(arr(g.used));
+  for (const R of arr(g.rounds)) for (const t of arr(R.turns)) for (const x of arr(t.log)) set.add(String(x.w).toLowerCase());
+  for (const x of arr(g.log)) set.add(String(x.w).toLowerCase());
+  if (g.current) set.add(String(g.current).toLowerCase());
+  return [...set];
+}
+
 function finishTurn(g, reason) {
   const { players } = ctx();
-  const deck = arr(g.deck);
-  if (g.current) deck.push(g.current); // unfinished card goes back into the bowl
-  g.current = null; g.deck = deck;
-  g.lastTurn = { team: g.turnTeam, pid: g.explainer, name: pname(players, g.explainer), log: arr(g.log), reason, round: g.round || 1 };
-  g.log = null; g.turnEndsAt = null; g.undo = null;
-  g.last = { ...(g.last || {}), [g.turnTeam]: g.explainer };
-  g.turnTeam = other(g.turnTeam);
-  if (deck.length === 0) g.phase = (g.round || 1) >= (g.totalRounds || 1) ? "over" : "roundEnd";
-  else g.phase = "between";
-  g.explainer = nextExplainer(players, g, g.turnTeam);
+  const log = arr(g.log);
+  if (g.current) log.push({ w: g.current, r: "time" }); // the word on screen is shown as ⏱ unfinished; it is not reused
+  g.current = null;
+  const rounds = arr(g.rounds); const ri = (g.round || 1) - 1;
+  const R = rounds[ri] || {}; const turns = arr(R.turns);
+  const turn = { team: g.turnTeam, pid: g.explainer, name: pname(players, g.explainer), log, reason };
+  turns.push(turn); rounds[ri] = { ...R, turns, locked: false }; g.rounds = rounds;
+  g.lastTurn = turn; g.log = null; g.turnEndsAt = null; g.undo = null;
+  g.turnIdx = (g.turnIdx || 0) + 1;
+  if (g.turnIdx >= arr(g.queue).length) { g.phase = "review"; g.explainer = null; }
+  else { g.phase = "between"; setSlot(g, players); }
   return g;
 }
 
@@ -619,12 +699,12 @@ function startTurn() {
   return txGame(g => {
     const { players } = ctx();
     if (g.phase !== "between") return;
-    const deck = arr(g.deck); if (!deck.length) return;
+    const slot = arr(g.queue)[g.turnIdx || 0]; if (!slot) return;
     const ex = players[g.explainer];
-    if (!ex || ex.team !== g.turnTeam) { g.explainer = nextExplainer(players, g, g.turnTeam); if (!g.explainer) return; }
-    g.current = deck.splice(Math.floor(Math.random() * deck.length), 1)[0];
-    g.deck = deck; g.phase = "turn"; g.turnId = (g.turnId || 0) + 1; g.log = [];
-    g.undo = null; g.skipLimit = settings.skipLimit; g.turnSecs = settings.timer; g.turnEndsAt = S.db.now() + settings.timer * 1000;
+    if (!ex || ex.team !== g.turnTeam) { g.explainer = pickForSlot(g, players, slot); if (!g.explainer) return; }
+    g.current = drawCard(g); if (!g.current) return;
+    const secs = roundKind(g) === "draw" ? settings.drawTimer : settings.timer;
+    Object.assign(g, { phase: "turn", turnId: (g.turnId || 0) + 1, log: [], undo: null, skipLimit: settings.skipLimit, turnSecs: secs, turnEndsAt: S.db.now() + secs * 1000 });
     return g;
   });
 }
@@ -632,28 +712,24 @@ function startTurn() {
 async function cardAction(result) {
   const { g } = ctx();
   if (S.busy || g.phase !== "turn" || g.explainer !== S.pid || !g.current || remainingMs(g) <= 0) return;
-  if (result === "skip" && skipsLeft(g) <= 0) return toast("No skips left this turn — keep explaining! 💪");
+  if (result === "skip" && skipsLeft(g) <= 0) return toast("No skips left this turn — keep going! 💪");
   const word = g.current, tid = g.turnId;
   S.busy = true; sound(result === "ok" ? "ok" : "skip");
   await txGame(cur => {
     if (cur.phase !== "turn" || cur.turnId !== tid || cur.current !== word) return;
     if (result === "skip" && skipsLeft(cur) <= 0) return;
     const log = arr(cur.log); log.push({ w: word, r: result }); cur.log = log;
-    if (result === "ok") {
-      cur.scores = { red: 0, blue: 0, ...(cur.scores || {}) }; cur.scores[cur.turnTeam]++;
-      cur.pts = { ...(cur.pts || {}) }; cur.pts[cur.explainer] = (cur.pts[cur.explainer] || 0) + 1;
-    }
-    cur.current = null; // guessed OR skipped → card leaves this round for good
-    const deck = arr(cur.deck);
-    if (!deck.length) return finishTurn(cur, "deck");
-    cur.current = deck.splice(Math.floor(Math.random() * deck.length), 1)[0]; cur.deck = deck;
-    cur.undo = { w: word, r: result, next: cur.current, at: S.db.now(), turnId: tid }; // only the last action, for a few seconds
+    cur.current = null; // guessed or skipped: the card is used up
+    const next = drawCard(cur);
+    if (!next) return finishTurn(cur, "deck");
+    cur.current = next;
+    cur.undo = { w: word, r: result, next, at: S.db.now(), turnId: tid }; // only the last action, for a few seconds
     return cur;
   });
   S.busy = false;
 }
 
-/* ---------- Undo: the explainer can take back the last Correct/Skip for a few seconds ---------- */
+/* ---------- Undo: for a few seconds the explainer can switch the last mark ✓ ↔ ✗. The word does NOT come back (no second try, no peeking). ---------- */
 const UNDO_MS = 5000;
 const undoLeftMs = g => (g.phase === "turn" && g.undo && g.undo.turnId === g.turnId ? UNDO_MS - (S.db.now() - g.undo.at) : 0);
 async function undoAction() {
@@ -665,13 +741,7 @@ async function undoAction() {
     if (cur.phase !== "turn" || !u || u.turnId !== cur.turnId || cur.current !== u.next || S.db.now() - u.at > UNDO_MS + 1000) return;
     const log = arr(cur.log); const last = log[log.length - 1];
     if (!last || last.w !== u.w) return;
-    log.pop(); cur.log = log;
-    const deck = arr(cur.deck); deck.push(u.next); cur.deck = deck; // the card that came next goes back into the bowl
-    cur.current = u.w;
-    if (u.r === "ok") {
-      cur.scores = { red: 0, blue: 0, ...(cur.scores || {}) }; cur.scores[cur.turnTeam] = Math.max(0, cur.scores[cur.turnTeam] - 1);
-      cur.pts = { ...(cur.pts || {}) }; cur.pts[cur.explainer] = Math.max(0, (cur.pts[cur.explainer] || 0) - 1);
-    }
+    log[log.length - 1] = { ...last, r: last.r === "ok" ? "skip" : "ok" }; cur.log = log; // ✗ → ✓ gives the skip back
     cur.undo = null;
     return cur;
   });
@@ -680,53 +750,62 @@ async function undoAction() {
 
 const endTurn = (turnId, reason) => txGame(g => (g.phase === "turn" && g.turnId === turnId ? finishTurn(g, reason) : undefined));
 
-function hostSkipPlayer() {
+// Before a turn starts: hand this turn to another player of the same team (the skipped player keeps their place in later rounds).
+async function hostSkipPlayer() {
+  const res = await txGame(g => {
+    const { players } = ctx();
+    if (g.phase !== "between") return;
+    const slot = arr(g.queue)[g.turnIdx || 0]; if (!slot) return;
+    const nextPid = pickForSlot(g, players, { team: slot.team, pid: null }, g.explainer);
+    if (!nextPid) return;
+    const q = arr(g.queue); q[g.turnIdx || 0] = { team: slot.team, pid: nextPid }; g.queue = q;
+    g.explainer = nextPid;
+    return g;
+  });
+  if (res && !res.committed) toast("There's no one else in this team to take the turn.");
+}
+
+/* ---------- Round review: everyone sees the answers, the host can fix them, then locks the round ---------- */
+function toggleResult(ti, wi) {
+  return txGame(g => {
+    if (g.phase !== "review") return;
+    const rounds = arr(g.rounds); const ri = (g.round || 1) - 1; const R = rounds[ri];
+    if (!R || R.locked) return;
+    const turns = arr(R.turns); const t = turns[ti]; if (!t) return;
+    const log = arr(t.log); const x = log[wi]; if (!x) return;
+    const orig = x.o || x.r; const r = x.r === "ok" ? (orig === "ok" ? "skip" : orig) : "ok"; // ✓↔✗, ⏱↔✓
+    log[wi] = { ...x, r, o: orig, edited: r !== orig };
+    turns[ti] = { ...t, log }; rounds[ri] = { ...R, turns }; g.rounds = rounds;
+    return g;
+  });
+}
+function confirmRound() {
   return txGame(g => {
     const { players } = ctx();
-    if (g.phase === "turn") {
-      const deck = arr(g.deck); if (g.current) deck.push(g.current);
-      g.lastTurn = { team: g.turnTeam, pid: g.explainer, name: pname(players, g.explainer), log: arr(g.log), reason: "skipped", round: g.round || 1 };
-      Object.assign(g, { deck, current: null, log: null, turnEndsAt: null, undo: null, phase: "between" });
-    } else if (g.phase !== "between") return;
-    g.last = { ...(g.last || {}), [g.turnTeam]: g.explainer };
-    g.explainer = nextExplainer(players, g, g.turnTeam);
+    if (g.phase !== "review") return;
+    const rounds = arr(g.rounds); const ri = (g.round || 1) - 1;
+    rounds[ri] = { ...(rounds[ri] || {}), locked: true };
+    if ((g.round || 1) >= (g.totalRounds || 1)) { g.rounds = rounds; g.phase = "over"; return g; }
+    g.round = (g.round || 1) + 1; rounds.push({ locked: false }); g.rounds = rounds;
+    const start = g.round % 2 === 0 ? other(g.firstTeam) : g.firstTeam; // the other team opens round 2
+    g.queue = buildQueue(players, start, g.round); g.turnIdx = 0; g.lastTurn = null; g.phase = "between";
+    setSlot(g, players);
     return g;
   });
 }
 
-function nextRound() {
-  return txGame(g => {
-    if (g.phase !== "roundEnd") return;
-    const { players } = ctx();
-    g.round = (g.round || 1) + 1; g.deck = shuffle(arr(g.pool)); g.phase = "between"; g.lastTurn = null;
-    g.explainer = nextExplainer(players, g, g.turnTeam);
-    return g;
-  });
-}
-
-async function startGame(force = false) {
-  const { d, players, settings } = ctx();
-  const pool = buildPool(d);
-  const red = teamList(players, "red"), blue = teamList(players, "blue");
-  if (!red.length || !blue.length) return toast("Both teams need at least one player.");
-  if (!pool.length) return toast("The bowl is empty — add some words first.");
-  const total = Object.keys(players).length;
-  const ready = Object.keys(players).filter(id => arr(d.words?.[id]).length >= settings.wordsPerPlayer).length;
-  if (!force && pool.length < 20) {
-    S.modal = { title: "The bowl is small",
-      body: `Only ${pool.length} cards — a round could end after just 1–2 turns.${ready < total ? ` Also, only ${ready} of ${total} players have submitted their words.` : ""} Add 10 random words?`,
-      ok: "🎲 Add 10 random words", action: "small-add", alt: "Start anyway", altAction: "start-force" };
-    return render();
-  }
-  if (!force && ready < total) {
-    S.modal = { title: "Start anyway?", body: `Only ${ready} of ${total} players have submitted their words. The bowl has ${pool.length} cards.`, ok: "Start game", action: "start-force" };
-    return render();
-  }
+async function startGame() {
+  const { players, settings } = ctx();
+  if (!teamList(players, "red").length || !teamList(players, "blue").length) return toast("Both teams need at least one player.");
   const first = Math.random() < .5 ? "red" : "blue";
-  const g = { phase: "between", round: 1, totalRounds: settings.mode === "classic" ? 3 : 1, pool, deck: shuffle(pool),
-    scores: { red: 0, blue: 0 }, turnTeam: first, last: {}, turnId: 0, startedAt: S.db.now() };
-  g.explainer = nextExplainer(players, g, first);
-  await S.db.set(roomPath("game"), g);
+  const all = packWords(settings);
+  let used = new Set(arr(ctx().g.used));
+  if (!all.some(w => !used.has(w.toLowerCase()))) used = new Set(); // every word was played already: start the memory over
+  const fresh = all.filter(w => !used.has(w.toLowerCase())), old = all.filter(w => used.has(w.toLowerCase()));
+  const g = { phase: "between", mode: settings.mode, round: 1, totalRounds: settings.mode === "draw" ? 2 : 1, firstTeam: first, used: [...used],
+    deck: [...shuffle(old), ...shuffle(fresh)], queue: buildQueue(players, first, 1), turnIdx: 0, rounds: [{ locked: false }], turnId: 0, startedAt: S.db.now() };
+  setSlot(g, players);
+  await S.db.update(roomPath(), { game: g, draw: null, words: null, extraWords: null });
 }
 
 function balanceTeams(randomize) {
@@ -746,6 +825,57 @@ function balanceTeams(randomize) {
   toast(randomize ? "Teams shuffled 🎲" : "Teams balanced ⚖️");
 }
 
+/* ---------- Drawing: the explainer draws, strokes sync to everyone in real time ---------- */
+// Coordinates are stored on a 1000 × 750 grid (4:3), so every screen shows the same picture.
+const canDraw = () => { const { g } = ctx(); return g.phase === "turn" && roundKind(g) === "draw" && g.explainer === S.pid && remainingMs(g) > 0; };
+function canvasPoint(cv, e) {
+  const r = cv.getBoundingClientRect();
+  return [Math.round(clamp((e.clientX - r.left) / r.width, 0, 1) * 1000), Math.round(clamp((e.clientY - r.top) / r.height, 0, 1) * 750)];
+}
+function flushStroke() {
+  const s = S.stroke; if (!s) return;
+  S.db.update(roomPath("draw/strokes"), { [s.id]: { c: s.c, w: s.w, p: s.pts.map(p => p.join(",")).join(";") } });
+}
+function scheduleFlush() { if (S.flushT) return; S.flushT = setTimeout(() => { S.flushT = null; flushStroke(); }, 70); }
+function clearCanvas() { const { g } = ctx(); const key = drawKey(g); S.clearedKey = key; S.db.set(roomPath("draw"), { key }); }
+const COLORS = { k: "#1b2142", r: "#e23b3b", b: "#2d6fe0", g: "#1f9d55", y: "#f2b400", n: "#8a5a2e" };
+const COLOR_NAMES = { k: "Black", r: "Red", b: "Blue", g: "Green", y: "Yellow", n: "Brown" };
+const SIZES = [{ w: 7, name: "Thin" }, { w: 18, name: "Thick" }];
+const ERASER_W = 34;
+const strokeColor = c => (c === "e" ? "#fffdf6" : COLORS[c] || COLORS.k); // old strokes use "p" = black
+// Brush-sized circle as the mouse cursor, with a light + dark outline so it shows on any colour.
+function updateCursor(cv) {
+  if (!cv.closest(".mine")) return;
+  const er = S.tool === "eraser", w = er ? ERASER_W : S.size;
+  const d = Math.max(4, Math.round(w * cv.getBoundingClientRect().width / 1000)), sz = d + 6, c = sz / 2;
+  const sig = `${er}-${S.color}-${d}`; if (cv.dataset.cur === sig) return; cv.dataset.cur = sig;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz}"><circle cx="${c}" cy="${c}" r="${d / 2}" fill="${er ? "#fffdf6" : COLORS[S.color]}" stroke="#ffffff" stroke-width="1.5"/><circle cx="${c}" cy="${c}" r="${d / 2 + 1.5}" fill="none" stroke="#1b2142" stroke-width="1"/></svg>`;
+  cv.style.cursor = `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${Math.round(c)} ${Math.round(c)}, crosshair`;
+}
+function paintCanvas() {
+  const cv = document.getElementById("cv"); if (!cv) return;
+  const { g, d } = ctx();
+  const r = cv.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1;
+  const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
+  if (!W || !H) return;
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  updateCursor(cv);
+  const c = cv.getContext("2d");
+  c.fillStyle = "#fffdf6"; c.fillRect(0, 0, W, H); c.lineCap = "round"; c.lineJoin = "round";
+  const sx = W / 1000, sy = H / 750, key = drawKey(g), dr = d.draw || {};
+  const strokes = dr.key === key ? Object.entries(dr.strokes || {}).sort(([a], [b]) => (a < b ? -1 : 1)).map(([, s]) => s) : [];
+  if (S.stroke && S.stroke.key === key) strokes.push({ c: S.stroke.c, w: S.stroke.w, p: S.stroke.pts.map(p => p.join(",")).join(";") });
+  for (const s of strokes) {
+    const pts = String(s.p || "").split(";").filter(Boolean).map(q => q.split(",").map(Number));
+    if (!pts.length) continue;
+    c.strokeStyle = strokeColor(s.c); c.lineWidth = (s.w || 7) * sx;
+    c.beginPath(); c.moveTo(pts[0][0] * sx, pts[0][1] * sy);
+    if (pts.length === 1) c.lineTo(pts[0][0] * sx + 0.1, pts[0][1] * sy);
+    for (const [x, y] of pts.slice(1)) c.lineTo(x * sx, y * sy);
+    c.stroke();
+  }
+}
+
 /* ---------- Actions ---------- */
 const ACTIONS = {
   create: () => createRoom(),
@@ -757,7 +887,7 @@ const ACTIONS = {
   "leave-confirm": async () => {
     const { isHost } = ctx(); const code = S.code, pid = S.pid;
     S.unsub && S.unsub(); S.unsub = null;
-    if (!isHost) { idStore().removeItem("jb_pid_" + code); await S.db.update(`rooms/${code}`, { [`players/${pid}`]: null, [`words/${pid}`]: null }); }
+    if (!isHost) { idStore().removeItem("jb_pid_" + code); await S.db.update(`rooms/${code}`, { [`players/${pid}`]: null }); }
     leaveRoom();
   },
   copy: async () => {
@@ -769,82 +899,51 @@ const ACTIONS = {
   team: ds => S.db.update(roomPath(`players/${S.pid}`), { team: ds.team }),
   swap: ds => { const p = ctx().players[ds.pid]; if (p) S.db.update(roomPath(`players/${ds.pid}`), { team: p.team === "red" ? "blue" : "red" }); },
   kick: ds => { const p = ctx().players[ds.pid]; S.modal = { title: `Remove ${p?.name}?`, body: "They can rejoin with the invite link.", ok: "Remove", action: "kick-confirm", danger: true, pid: ds.pid }; render(); },
+  "kick-confirm": () => { const id = S.modal.pid; S.modal = null; S.db.update(roomPath(), { [`players/${id}`]: null }); render(); },
   "make-host": ds => { const p = ctx().players[ds.pid]; S.modal = { title: `Make ${p?.name} the host?`, body: "They'll get the host controls and you'll become a regular player.", ok: "Make host", action: "make-host-confirm", pid: ds.pid }; render(); },
   "make-host-confirm": async () => { const id = S.modal.pid; S.modal = null; await S.db.update(roomPath("meta"), { hostId: id }); toast("Host role handed over 👑"); },
-  "claim-host": () => { S.modal = { title: "Become the host?", body: "You'll get the host controls (start rounds, skip players, reset). Only do this if the host is really away.", ok: "Become host", action: "claim-host-confirm" }; render(); },
+  "claim-host": () => { S.modal = { title: "Become the host?", body: "You'll get the host controls (start turns, skip players, check answers, reset). Only do this if the host is really away.", ok: "Become host", action: "claim-host-confirm" }; render(); },
   "claim-host-confirm": async () => {
     const old = ctx().hostId; S.modal = null; render();
     const res = await S.db.transaction(roomPath("meta"), m => { if (!m || m.hostId !== old) return; m.hostId = S.pid; return m; });
     toast(res?.committed ? "You're the host now 👑" : "Someone else already took over.");
   },
-  "kick-confirm": () => { const id = S.modal.pid; S.modal = null; S.db.update(roomPath(), { [`players/${id}`]: null, [`words/${id}`]: null }); render(); },
   balance: () => balanceTeams(false),
   shuffle: () => balanceTeams(true),
   setting: ds => S.db.update(roomPath("settings"), { [ds.k]: ds.k === "mode" ? ds.v : Number(ds.v) }),
-  "to-submit": () => {
-    const { players } = ctx();
-    if (!teamList(players, "red").length || !teamList(players, "blue").length) return toast("Both teams need at least one player.");
-    S.db.update(roomPath("game"), { phase: "submit" });
-  },
-  "back-lobby": () => S.db.update(roomPath("game"), { phase: "lobby" }),
-  submitWords: async () => {
-    const N = ctx().settings.wordsPerPlayer;
-    const words = []; const seen = new Set();
-    for (let i = 0; i < N; i++) { const w = cleanWord(S.drafts.words[i]); if (w && !seen.has(w.toLowerCase())) { seen.add(w.toLowerCase()); words.push(w); } }
-    if (words.length < N) {
-      const empty = [...document.querySelectorAll('[data-model="word"]')].find(el => !cleanWord(el.value));
-      empty?.focus();
-      return toast(`Add ${N} different word${N > 1 ? "s" : ""} or phrases.`);
-    }
-    await S.db.set(roomPath(`words/${S.pid}`), words);
-    S.editingWords = false; S.drafts.words = [...words]; render(); toast("Your words are in the bowl! 🥣");
-  },
-  "edit-words": () => { S.editingWords = true; S.drafts.words = [...arr(S.data.words?.[S.pid])]; render(); },
-  "bulk-add": async () => {
-    const items = S.drafts.bulk.split(/[\n,;]+/).map(cleanWord).filter(Boolean);
-    if (!items.length) return toast("Paste some words first (one per line or comma-separated).");
-    const cur = arr(S.data.extraWords); const seen = new Set(cur.map(w => w.toLowerCase())); let added = 0;
-    for (const w of items) if (!seen.has(w.toLowerCase())) { seen.add(w.toLowerCase()); cur.push(w); added++; }
-    await S.db.set(roomPath("extraWords"), cur);
-    S.drafts.bulk = ""; const ta = document.querySelector('[data-model="bulk"]'); if (ta) ta.value = "";
-    toast(`Added ${added} custom word${added === 1 ? "" : "s"}.`);
-  },
-  "bulk-clear": () => S.db.set(roomPath("extraWords"), null),
-  suggest: ds => {
-    const i = +ds.i;
-    const [w] = randomPackWords(1, S.drafts.words.filter((_, j) => j !== i).filter(Boolean));
-    if (!w) return toast("No more suggestions in the chosen packs.");
-    S.drafts.words[i] = w;
-    const el = document.querySelector(`[data-model="word"][data-i="${i}"]`); if (el) el.value = w;
-  },
-  "add-random": async () => {
-    const words = randomPackWords(10);
-    if (!words.length) return toast("All words from the chosen packs are already in the bowl.");
-    await S.db.set(roomPath("extraWords"), [...arr(S.data.extraWords), ...words]);
-    toast(`Added ${words.length} random words 🎲`);
-  },
   pack: ds => {
     const cur = activePacks(ctx().settings); const on = cur.includes(ds.id);
     const next = on ? cur.filter(x => x !== ds.id) : [...cur, ds.id];
     if (!next.length) return toast("Keep at least one word pack.");
     S.db.update(roomPath("settings"), { packs: PACK_IDS.filter(id => next.includes(id)).join(",") });
   },
-  start: () => startGame(false),
-  "start-force": () => { S.modal = null; startGame(true); },
-  "small-add": async () => { S.modal = null; await ACTIONS["add-random"](); },
-  "modal-alt": () => { const a = S.modal?.altAction; ACTIONS[a]?.({}); },
+  start: () => startGame(),
   "start-turn": () => startTurn(),
   correct: (ds, el) => { el?.blur(); cardAction("ok"); },
   skip: (ds, el) => { el?.blur(); cardAction("skip"); },
-  "next-round": () => nextRound(),
-  "host-skip": () => { S.modal = { title: "Skip current player?", body: "Their turn ends now (points already scored are kept) and the next player on the same team is up.", ok: "Skip player", action: "host-skip-confirm" }; render(); },
-  "host-skip-confirm": () => { S.modal = null; render(); hostSkipPlayer(); },
   undo: (ds, el) => { el?.blur(); undoAction(); },
-  "end-my-turn": (ds, el) => { el?.blur(); const { g } = ctx(); if (g.phase === "turn" && g.explainer === S.pid) endTurn(g.turnId, "gaveup"); },
+  "end-my-turn": (ds, el) => { el?.blur(); const { g } = ctx(); if (g.phase !== "turn" || g.explainer !== S.pid) return;
+    S.endTurnId = g.turnId; S.modal = { title: "End your turn now?", body: "Points are kept.", ok: "🏳️ End my turn", action: "end-my-turn-ok" }; render(); },
+  "end-my-turn-ok": () => { S.modal = null; render(); const { g } = ctx(); if (g.phase === "turn" && g.explainer === S.pid && g.turnId === S.endTurnId) endTurn(g.turnId, "gaveup"); },
+  tool: (ds, el) => { el?.blur(); S.tool = ds.tool; render(); },
+  color: (ds, el) => { el?.blur(); S.color = ds.c; S.tool = "pen"; render(); },
+  size: (ds, el) => { el?.blur(); S.size = +ds.w; S.tool = "pen"; render(); },
+  "clear-canvas": (ds, el) => { el?.blur(); if (canDraw()) clearCanvas(); },
+  toggle: ds => { if (ctx().isHost) toggleResult(+ds.t, +ds.w); },
+  "confirm-round": () => {
+    const { g } = ctx(); const last = (g.round || 1) >= (g.totalRounds || 1);
+    S.modal = { title: last ? "Answers checked?" : "Answers checked?", body: last ? "The scores will be locked and the winner revealed." : "This round's answers will be locked and Round 2 starts.", ok: last ? "🏆 Show the winner" : "✅ Confirm & start Round 2", action: "confirm-round-ok" }; render();
+  },
+  "confirm-round-ok": () => { S.modal = null; render(); confirmRound(); },
+  "host-skip": () => {
+    const { g, players } = ctx();
+    S.modal = { title: "Skip current player?", body: `${pname(players, g.explainer)} won't explain this turn. The next player on the same team takes it instead.`, ok: "Skip player", action: "host-skip-confirm" }; render();
+  },
+  "host-skip-confirm": () => { S.modal = null; render(); hostSkipPlayer(); },
   "host-end": () => { const { g } = ctx(); if (g.phase === "turn") endTurn(g.turnId, "host"); },
-  "host-reset": () => { S.modal = { title: "Reset the game?", body: "Scores and all words in the bowl will be cleared. Players and teams stay. Everyone returns to the lobby.", ok: "Reset game", action: "reset-confirm", danger: true }; render(); },
-  "reset-confirm": () => { S.modal = null; render(); S.db.update(roomPath(), { game: { phase: "lobby" }, words: null, extraWords: null }); },
-  "play-again": () => ACTIONS["host-reset"](),
+  "host-reset": () => { S.modal = { title: "Reset the game?", body: "Scores and answers will be cleared. Players and teams stay. Everyone returns to the lobby.", ok: "Reset game", action: "reset-confirm", danger: true }; render(); },
+  "reset-confirm": () => { S.modal = null; render(); S.db.update(roomPath(), { game: { phase: "lobby", used: usedWords(ctx().g) }, draw: null, words: null, extraWords: null }); },
+  "play-again": () => { S.modal = { title: "Play again?", body: "Everyone returns to the lobby with the same teams. You can shuffle teams and change settings there.", ok: "🔁 Play again", action: "reset-confirm" }; render(); },
   "modal-close": () => { S.modal = null; render(); },
   "modal-ok": () => { const a = S.modal?.action; if (a === "modal-close") { S.modal = null; render(); } else ACTIONS[a]?.({}); },
 };
@@ -866,7 +965,11 @@ function header() {
 }
 
 function rulesCards() {
-  return `<div class="rules">${[1, 2, 3].map(r => `<div class="rule"><div class="ic">${ROUNDS[r].icon}</div><b>Round ${r} · ${ROUNDS[r].name}</b><p>${ROUNDS[r].rule}</p></div>`).join("")}</div>`;
+  const cards = [
+    { ic: ROUNDS.alias.icon, t: "Alias", p: "Explain the word without saying it or any part of it." },
+    { ic: ROUNDS.draw.icon, t: "Draw", p: "Draw the word — no letters, no talking. Your team guesses." },
+  ];
+  return `<div class="rules">${cards.map(c => `<div class="rule"><div class="ic">${c.ic}</div><b>${c.t}</b><p>${c.p}</p></div>`).join("")}</div>`;
 }
 
 function viewHome() {
@@ -874,7 +977,7 @@ function viewHome() {
   return `<section class="hero">
       <span class="hero-badge">✨ New Year Party Game</span>
       <h1>Jingle <em>Bowl</em></h1>
-      <p class="lead">Fill the bowl with words, split into two teams and race the clock — describe it, act it out, then nail it in one word.</p>
+      <p class="lead">Two teams, one clock: explain the words, then draw them. Everyone gets a turn!</p>
     </section>
     <section class="panel home-card">
       ${S.fatal ? `<div class="err" style="margin-bottom:14px">${esc(S.fatal)}</div>` : ""}
@@ -918,48 +1021,50 @@ function playerLi(id, p, isHost, hostId) {
 
 function settingsPanel() {
   const { settings: st, isHost, players } = ctx();
+  const draw = st.mode === "draw";
+  const red = teamList(players, "red").length, blue = teamList(players, "blue").length;
+  const n = Object.keys(players).length;
+  const perTeam = Math.max(red, blue, Math.ceil(n / 2), 1);
+  const turns = perTeam * 2;
+  const mins = secs => Math.round(turns * (secs + 15) / 60);
+  const est = `Each round: everyone explains once → ${turns} turns (~${mins(st.timer)} min${draw ? `; drawing round ~${mins(st.drawTimer)} min` : ""}).`;
+  const uneven = red && blue && red !== blue ? `<p class="small muted" style="margin-top:6px">${TEAMS[red < blue ? "red" : "blue"].name} has fewer players, so ${Math.abs(red - blue) === 1 ? "one of them explains" : "some of them explain"} twice per round to keep it fair.</p>` : "";
   if (!isHost) {
     // Players only see a short read-only summary; the full panel is for the host.
     const pill = t => `<span class="pill">${t}</span>`;
     return `<div class="panel"><h2>Game rules</h2><div class="row">
-      ${pill(`⏱ ${st.timer}s per turn`)}
+      ${pill(draw ? "💬 Alias + 🎨 Draw · 2 rounds" : "💬 Alias · 1 round")}
+      ${pill(`⏱ ${st.timer}s to explain`)}
+      ${draw ? pill(`🎨 ${st.drawTimer}s to draw`) : ""}
       ${pill(`✗ ${st.skipLimit > 0 ? st.skipLimit : "Unlimited"} skip${st.skipLimit === 1 ? "" : "s"} per turn`)}
-      ${pill(`📝 ${st.wordsPerPlayer} word${st.wordsPerPlayer > 1 ? "s" : ""} each`)}
-      ${pill(st.mode === "classic" ? "🎭 Classic 3 Rounds" : "💬 Single Round")}
-    </div><p class="small muted" style="margin-top:10px">Set by the host.</p></div>`;
+    </div><p class="small muted" style="margin-top:10px">${est} Set by the host.</p>${uneven}</div>`;
   }
-  const chip = (k, v, label) => `<button class="chip ${st[k] == v ? "on" : ""}" ${isHost ? `data-action="setting" data-k="${k}" data-v="${v}"` : "disabled"}>${label}</button>`;
-  const mode = (v, t, s) => `<button class="mode ${st.mode === v ? "on" : ""}" ${isHost ? `data-action="setting" data-k="mode" data-v="${v}"` : "disabled"}><b>${t}</b><span>${s}</span></button>`;
-  const n = Math.max(1, Object.keys(players).length);
-  const cards = n * st.wordsPerPlayer;
-  const perTurn = Math.max(2, Math.round(st.timer / 12));
-  const turns = Math.ceil(cards / perTurn) * (st.mode === "classic" ? 3 : 1);
+  const chip = (k, v, label) => `<button class="chip ${st[k] == v ? "on" : ""}" data-action="setting" data-k="${k}" data-v="${v}">${label}</button>`;
+  const mode = (v, t, s) => `<button class="mode ${st.mode === v ? "on" : ""}" data-action="setting" data-k="mode" data-v="${v}"><b>${t}</b><span>${s}</span></button>`;
   return `<div class="panel">
     <h2>Game settings</h2>
-    <div class="set-row"><div class="h3">Turn timer</div><div class="row">${[30, 45, 60, 90, 120].map(v => chip("timer", v, v + "s")).join("")}</div></div>
-    <div class="set-row"><div class="h3">Skips per turn</div><div class="row">${[1, 2, 3, 5].map(v => chip("skipLimit", v, v)).join("")}${chip("skipLimit", 0, "∞")}</div></div>
-    <div class="set-row"><div class="h3">Word packs for 🎲 suggestions</div><div class="row">${PACK_IDS.map(id => `<button class="chip ${activePacks(st).includes(id) ? "on" : ""}" ${isHost ? `data-action="pack" data-id="${id}"` : "disabled"}>${PACKS[id].icon} ${PACKS[id].name}</button>`).join("")}</div></div>
-    <div class="set-row"><div class="h3">Words per player</div><div class="row">${[1, 2, 3, 4, 5].map(v => chip("wordsPerPlayer", v, v)).join("")}</div></div>
     <div class="set-row"><div class="h3">Game mode</div><div class="modes">
-      ${mode("single", "Single Round", "💬 Describe only")}
-      ${mode("classic", "Classic 3 Rounds", "💬 Describe · 🎭 Charades · ☝️ One Word")}
+      ${mode("draw", "Alias + Draw", "2 rounds · 💬 explain, then 🎨 draw")}
+      ${mode("alias", "Alias", "1 round · 💬 explain only")}
     </div></div>
-    <p class="small muted">≈ ${cards} cards in the bowl · roughly ${turns} turn${turns === 1 ? "" : "s"} in total.</p>
-    ${isHost && n >= 4 && turns < n ? `<div class="note small" style="margin-top:10px">💡 Only ~${turns} of ${n} players would get to explain. Raise “words per player” or pick Classic 3 Rounds so everyone gets a turn.</div>` : ""}
-    ${!isHost ? `<p class="small muted" style="margin-top:8px">Only the host can change settings.</p>` : ""}
+    <div class="set-row"><div class="h3">💬 Time to explain</div><div class="row">${[45, 60, 90].map(v => chip("timer", v, v + "s")).join("")}</div></div>
+    ${draw ? `<div class="set-row"><div class="h3">🎨 Time to draw</div><div class="row">${[60, 90, 120].map(v => chip("drawTimer", v, v + "s")).join("")}</div></div>` : ""}
+    <div class="set-row"><div class="h3">Skips per turn</div><div class="row">${[1, 2, 3, 5].map(v => chip("skipLimit", v, v)).join("")}${chip("skipLimit", 0, "∞")}</div></div>
+    <div class="set-row"><div class="h3">Word packs</div><div class="row">${PACK_IDS.map(id => `<button class="chip ${activePacks(st).includes(id) ? "on" : ""}" data-action="pack" data-id="${id}">${PACKS[id].icon} ${PACKS[id].name}</button>`).join("")}</div></div>
+    <p class="small muted">${est}</p>${uneven}
   </div>`;
 }
 
 function teamPickBanner() {
   const { me, g } = ctx();
   if (!me || me.team || g.phase === "lobby") return "";
-  return `<div class="teampick"><b>👋 Pick a team to join the game:</b><div class="row">
+  return `<div class="teampick"><b>👋 Pick a team — you'll get a turn from the next round:</b><div class="row">
     <button class="btn red" data-action="team" data-team="red">${TEAMS.red.emoji} ${TEAMS.red.name}</button>
     <button class="btn blue" data-action="team" data-team="blue">${TEAMS.blue.emoji} ${TEAMS.blue.name}</button></div></div>`;
 }
 
 function viewLobby() {
-  const { players, isHost } = ctx();
+  const { players, isHost, settings } = ctx();
   const none = teamList(players, null);
   return `<div class="grid2">
     <div>
@@ -981,70 +1086,22 @@ function viewLobby() {
     <div>
       ${settingsPanel()}
       <div class="panel stack">
-        ${isHost ? `<button class="btn gold lg wide" data-action="to-submit">Next: fill the bowl →</button>
-          <p class="small muted center">Everyone will add their secret words next.</p>`
+        ${isHost ? `<button class="btn gold lg wide" data-action="start">🚀 Start the game</button>
+          <p class="small muted center">Start once everyone has joined and picked a team.</p>`
         : `<div class="center muted">⏳ Waiting for the host to start…</div>`}
         <details class="howto"><summary>How to play</summary><ol>
-          <li>Everyone secretly adds words or short phrases to the bowl.</li>
           <li>Teams take turns. One player explains, their team guesses before the timer runs out.</li>
-          <li><b>Correct</b> = +1 point. <b>Skip</b> = card is burned for this round (limited skips per turn).</li>
-          <li>The round ends when the bowl is empty. In Classic mode the same words return for Charades and One Word rounds.</li>
+          <li>${settings.mode === "draw" ? "Round 1: explain with words. Round 2: draw new words — no letters, no talking." : "Explain with words — never say the word or any part of it."}</li>
+          <li><b>Correct</b> = +1 point. <b>Skip</b> = next word (limited per turn). Wrong button? <b>Undo</b> switches ✓ / ✗ for 5 seconds.</li>
+          <li>Everyone explains once per round. After each round the host checks the answers with everyone.</li>
         </ol></details>
       </div>
     </div>
   </div>`;
 }
 
-function viewSubmit() {
-  const { d, players, settings, isHost } = ctx();
-  const N = settings.wordsPerPlayer;
-  const mine = arr(d.words?.[S.pid]);
-  const submitted = mine.length >= N && !S.editingWords;
-  const ids = Object.keys(players);
-  const readyIds = ids.filter(id => arr(d.words?.[id]).length >= N);
-  const pool = buildPool(d);
-  const extra = arr(d.extraWords);
-  return `${teamPickBanner()}<div class="grid2">
-    <div>
-      <div class="panel">
-        <h2>Your secret words</h2>
-        ${submitted ? `
-          <p class="muted" style="margin-bottom:12px">✅ You're done! Your words are in the bowl.</p>
-          <div class="mywords">${mine.map(w => `<span class="wchip">${esc(w)}</span>`).join("")}</div>
-          <button class="btn" style="margin-top:14px" data-action="edit-words">✏️ Edit my words</button>
-        ` : `
-          <p class="muted" style="margin-bottom:14px">Add <b>${N}</b> English word${N > 1 ? "s" : ""}. Keep them secret!<br>Any word everyone at the party would know. Need ideas? New Year, movies, office life… or tap 🎲${settings.mode === "classic" ? `<br>🎭 Heads up: in Round 2 you'll act these words out, so pick things you could show without talking!` : ""}</p>
-          <form data-submit="submitWords" class="stack" autocomplete="off">
-            ${Array.from({ length: N }, (_, i) => `<div class="word-row"><input class="input" data-model="word" data-i="${i}" maxlength="40" placeholder="Word #${i + 1}" value="${esc(S.drafts.words[i] || "")}"><button type="button" class="btn dice" data-action="suggest" data-i="${i}" title="Suggest a random word" aria-label="Suggest a random word">🎲</button></div>`).join("")}
-            <p class="small muted">Stuck? Tap 🎲 for a random word — keep it or type over it.</p>
-            <button type="submit" class="btn gold lg wide">Drop into the bowl 🥣</button>
-          </form>`}
-      </div>
-      ${isHost ? `<div class="panel">
-        <h2>Custom word list <span class="muted small">(host)</span></h2>
-        <p class="small muted" style="margin-bottom:10px">Paste extra words — one per line or comma-separated. ${extra.length ? `<b>${extra.length}</b> custom word${extra.length === 1 ? "" : "s"} added.` : ""}</p>
-        <textarea class="input" data-model="bulk" placeholder="Snowman&#10;Fireworks&#10;Coffee, Pizza, Karaoke">${esc(S.drafts.bulk)}</textarea>
-        <div class="row" style="margin-top:10px"><button class="btn" data-action="bulk-add">➕ Add to bowl</button><button class="btn" data-action="add-random">🎲 +10 random words</button>${extra.length ? `<button class="btn ghost" data-action="bulk-clear">Clear custom words</button>` : ""}</div>
-      </div>` : ""}
-    </div>
-    <div>
-      <div class="panel center">
-        <div class="bowl"><div><b>${pool.length}</b><span>cards in the bowl</span></div></div>
-        <div class="h3">${readyIds.length} / ${ids.length} players finished</div>
-        <div class="progress"><i style="width:${ids.length ? (readyIds.length / ids.length) * 100 : 0}%"></i></div>
-        <div class="ready-list" style="justify-content:center">${ids.map(id => `<span class="tag ${readyIds.includes(id) ? "done" : ""}" data-key="r-${id}">${readyIds.includes(id) ? "✓" : "…"} ${esc(players[id].name)}</span>`).join("")}</div>
-      </div>
-      <div class="panel stack">
-        ${isHost ? `<button class="btn gold lg wide" data-action="start" ${pool.length ? "" : "disabled"}>🚀 Start the game (${pool.length} cards)</button>
-          <button class="btn ghost wide small" data-action="back-lobby">← Back to lobby</button>`
-        : `<div class="center muted">⏳ The host will start once everyone's words are in.</div>`}
-      </div>
-    </div>
-  </div>`;
-}
-
 function scoreboard(g) {
-  const sc = g.scores || {}; const r = sc.red || 0, b = sc.blue || 0;
+  const { sc } = tally(g); const r = sc.red || 0, b = sc.blue || 0;
   const act = t => (g.phase === "turn" || g.phase === "between") && g.turnTeam === t ? "active" : "";
   return `<div class="score">
     <div class="sc t-red ${act("red")}"><span class="sc-name">${TEAMS.red.emoji} ${TEAMS.red.short}</span><b class="pop" data-key="sr-${r}">${r}</b></div>
@@ -1058,37 +1115,47 @@ function roundBanner(g) {
   return `<div class="round"><span class="ic">${ri.icon}</span><div><b>${total > 1 ? `Round ${g.round || 1} of ${total} · ` : ""}${ri.name}</b><p>${ri.rule}</p></div></div>`;
 }
 
-function turnSummary(lt) {
-  if (!lt) return "";
-  const log = arr(lt.log); const ok = log.filter(x => x.r === "ok"), sk = log.filter(x => x.r !== "ok");
-  const why = { time: "⏰ Time's up!", host: "⏹ Turn ended by the host", deck: "🥣 The bowl is empty!", skipped: "⏭ Player skipped by the host", gaveup: "🏳️ Explainer ended the turn early" }[lt.reason] || "";
-  return `<div class="summary t-${lt.team}">
-    <div class="sum-head"><span>${esc(lt.name)} · ${TEAMS[lt.team]?.name || ""}</span><span class="sum-pts">+${ok.length}</span></div>
-    <div class="sum-sub">${why} ${ok.length} guessed · ${sk.length} skipped</div>
-    <div class="sum-words">${ok.map(x => `<span class="wchip ok">✓ ${esc(x.w)}</span>`).join("")}${sk.map(x => `<span class="wchip skip">✗ ${esc(x.w)}</span>`).join("")}${!log.length ? `<span class="muted small">No cards played.</span>` : ""}</div>
+const REASONS = { time: "⏰ Time's up!", host: "⏹ Ended by the host", deck: "🃏 Out of words!", gaveup: "🏳️ Ended early" };
+const MARK = { ok: "✓", skip: "✗", time: "⏱" };
+function wordChips(log, opts = {}) {
+  return arr(log).map((x, i) => {
+    const r = MARK[x.r] ? x.r : "skip";
+    const cls = `wchip ${r}${opts.edit ? " tog" : ""}`;
+    const txt = `${MARK[r]} ${esc(x.w)}${x.edited ? " ✏️" : ""}`;
+    const tip = r === "time" ? "Unfinished word: tap to count it ✓" : "Switch ✓ / ✗";
+    return opts.edit ? `<button class="${cls}" data-action="toggle" data-t="${opts.ti}" data-w="${i}" title="${tip}">${txt}</button>` : `<span class="${cls}" ${r === "time" ? `title="Unfinished: time ran out or the turn ended"` : ""}>${txt}</span>`;
+  }).join("");
+}
+function turnSummary(t, opts = {}) {
+  if (!t) return "";
+  const log = arr(t.log); const n = r => log.filter(x => x.r === r).length; const ok = n("ok"), un = n("time");
+  return `<div class="summary t-${t.team}">
+    <div class="sum-head"><span>${esc(t.name)} · ${TEAMS[t.team]?.name || ""}</span><span class="sum-pts">+${ok}</span></div>
+    <div class="sum-sub">${[REASONS[t.reason] || "", `${ok} guessed`, `${log.length - ok - un} skipped`, un ? `⏱ ${un} unfinished` : ""].filter(Boolean).map(x => `<span class="nw">${x}</span>`).join(" · ")}</div>
+    <div class="sum-words">${wordChips(log, opts)}${!log.length ? `<span class="muted small">The turn ended before any word was shown.</span>` : ""}</div>
   </div>`;
 }
 
 function viewBetween() {
   const { g, players, isHost } = ctx();
   const ex = players[g.explainer]; const isMe = g.explainer === S.pid; const team = g.turnTeam;
+  const drawing = roundKind(g) === "draw";
   return `${teamPickBanner()}<div class="grid2">
     <div class="stack">
       ${roundBanner(g)}
       <div class="panel upnext">
-        <div class="h3">Up next</div>
+        <div class="h3">Up next · ${turnLabel(g)}</div>
         ${ex ? avatar(ex.name) : ""}
-        <h2>${ex ? (isMe ? "You're up! 🎤" : esc(ex.name)) : "No player available"}</h2>
+        <h2>${ex ? (isMe ? (drawing ? "Your turn to draw! 🎨" : "You're up! 🎤") : esc(ex.name)) : "No player available"}</h2>
         <span class="team-label t-${team}">${TEAMS[team].emoji} ${TEAMS[team].name} guesses</span>
         ${ex && ex.online === false && isHost ? `<div class="note small" style="margin-top:14px">${esc(ex.name)} seems offline. Use <b>Skip Current Player</b> below if they're away.</div>` : ""}
         <div style="margin-top:20px" class="stack">
           ${isMe ? `<button class="btn gold lg wide" data-action="start-turn">▶ Start my turn</button>
-              <p class="small muted kbd-hint">Desktop shortcuts: <kbd>Space</kbd> = Correct, <kbd>S</kbd> = Skip</p>`
+              <p class="small muted kbd-hint">Desktop shortcuts: <kbd>Space</kbd> = Correct, <kbd>S</kbd> = Skip, <kbd>⌫</kbd> = Undo</p>`
             : isHost ? `<button class="btn lg wide" data-action="start-turn" ${ex ? "" : "disabled"}>▶ Start turn for ${ex ? esc(ex.name) : "…"}</button>
               <p class="small muted">Or wait for ${ex ? esc(ex.name) : "the player"} to press start.</p>`
             : `<p class="muted">⏳ Waiting for ${ex ? esc(ex.name) : "the next player"} to start…</p>`}
         </div>
-        <div class="stats"><span class="pill">🃏 ${cardsLeft(g)} cards left</span></div>
       </div>
     </div>
     <div class="stack">
@@ -1104,71 +1171,107 @@ function timerState(g) {
   return { sec, frac: clamp(ms / total, 0, 1), urgent: sec <= 10 ? "urgent" : "" };
 }
 
+function turnControls(g) {
+  const log = arr(g.log); const ok = log.filter(x => x.r === "ok").length; const sl = skipsLeft(g);
+  return `<div class="ex-meta"><span class="pill">${turnLabel(g)}</span><span class="pill">✓ ${ok} this turn</span><span class="pill">✗ ${log.length - ok} skipped</span></div>
+    <div class="ex-btns">
+      <button class="btn skipb" data-action="skip" ${sl <= 0 ? "disabled" : ""}>✗ Skip <kbd>S</kbd>${sl === Infinity ? "" : `<small>${sl} left</small>`}</button>
+      <button class="btn correctb" data-action="correct">✓ Correct <kbd>Space</kbd></button>
+    </div>
+    ${undoLeftMs(g) > 0 ? `<div class="center"><button class="btn undo" data-action="undo" data-key="undo-${log.length}">↩️ ${esc(g.undo.w)}: ${g.undo.r === "ok" ? "✓ → ✗" : "✗ → ✓"} <kbd>⌫</kbd></button></div>` : ""}
+    <div class="center"><button class="btn ghost endmine" data-action="end-my-turn">🏳️ End my turn</button></div>
+    ${hostBar(true)}`;
+}
+
 function viewExplainer() {
   const { g } = ctx(); const t = timerState(g); const ri = roundInfo(g);
-  const log = arr(g.log); const ok = log.filter(x => x.r === "ok").length;
   const w = g.current || ""; const len = w.length > 24 ? "xlong" : w.length > 13 ? "long" : "";
-  const sl = skipsLeft(g);
-  return `<div class="ex">
-    <div class="ex-top">
+  const top = `<div class="ex-top">
       <div><span class="team-label t-${g.turnTeam}">${TEAMS[g.turnTeam].emoji} ${TEAMS[g.turnTeam].name}</span>
         <div class="small muted" style="margin-top:6px">${ri.icon} ${(g.totalRounds || 1) > 1 ? `Round ${g.round} · ` : ""}${ri.name}</div></div>
       <div class="timer-big ${t.urgent}" data-urgent><span data-timer>${t.sec}</span>s</div>
     </div>
-    <div class="timerbar ${t.urgent}" data-urgent><i data-timerbar style="transform:scaleX(${t.frac})"></i></div>
-    ${(g.round || 1) === 2 ? `<div class="note center small">📷 Charades round — turn your camera on and step back so everyone sees your hands!</div>` : ""}
+    <div class="timerbar ${t.urgent}" data-urgent><i data-timerbar style="transform:scaleX(${t.frac})"></i></div>`;
+  if (roundKind(g) === "draw") {
+    return `<div class="ex drawing">${top}
+      <div class="draw-head">
+        <div class="draw-word" data-key="dw-${g.turnId}-${hash(w)}-${arr(g.log).length}">🎨 Draw: <b>${esc(w)}</b></div>
+        <div class="tools">
+          <div class="swatches">${Object.keys(COLORS).map(k => `<button class="sw ${S.tool === "pen" && S.color === k ? "on" : ""}" style="--c:${COLORS[k]}" data-action="color" data-c="${k}" title="${COLOR_NAMES[k]}" aria-label="${COLOR_NAMES[k]}"></button>`).join("")}</div>
+          <div class="sizes">${SIZES.map(s => `<button class="chip sz ${S.tool === "pen" && S.size === s.w ? "on" : ""}" data-action="size" data-w="${s.w}" title="${s.name} line" aria-label="${s.name} line"><i style="width:${s.w === 7 ? 6 : 14}px;height:${s.w === 7 ? 6 : 14}px"></i></button>`).join("")}</div>
+          <button class="chip ${S.tool === "eraser" ? "on" : ""}" data-action="tool" data-tool="eraser" title="Eraser">🧽<span class="lbl"> Eraser</span></button>
+          <button class="chip" data-action="clear-canvas" title="Clear">🗑<span class="lbl"> Clear</span></button>
+        </div>
+      </div>
+      <div class="canvas-wrap mine" data-key="cv-wrap"><canvas id="cv"></canvas></div>
+      ${turnControls(g)}
+    </div>`;
+  }
+  return `<div class="ex">${top}
     <div class="cardstage">
-      <div class="wordcard" data-key="card-${g.turnId}-${hash(w)}-${log.length}">
+      <div class="wordcard" data-key="card-${g.turnId}-${hash(w)}-${arr(g.log).length}">
         <div class="wc-label">Your word</div>
         <div class="wc-word ${len}">${esc(w)}</div>
         <div class="wc-rule">${ri.rule}</div>
       </div>
     </div>
-    <div class="ex-meta"><span class="pill">🃏 ${cardsLeft(g)} left</span><span class="pill">✓ ${ok} this turn</span><span class="pill">✗ ${log.length - ok} skipped</span></div>
-    <div class="ex-btns">
-      <button class="btn skipb" data-action="skip" ${sl <= 0 ? "disabled" : ""}>✗ Skip <kbd>S</kbd>${sl === Infinity ? "" : `<small>${sl} left</small>`}</button>
-      <button class="btn correctb" data-action="correct">✓ Correct <kbd>Space</kbd></button>
-    </div>
-    ${undoLeftMs(g) > 0 ? `<div class="center"><button class="btn undo" data-action="undo" data-key="undo-${log.length}">↩️ Undo: ${g.undo.r === "ok" ? "✓" : "✗"} ${esc(g.undo.w)} <kbd>⌫</kbd></button></div>` : ""}
-    ${sl <= 0 ? `<div class="center"><button class="btn ghost" data-action="end-my-turn">🏳️ No skips left? End my turn</button><div class="small muted" style="margin-top:4px">The card goes back into the bowl. Points from this turn are kept.</div></div>` : ""}
-    ${hostBar(true)}
+    ${turnControls(g)}
   </div>`;
 }
 
 function viewWatch() {
-  const { g, players, me } = ctx(); const t = timerState(g);
-  const ex = players[g.explainer]; const log = arr(g.log); const ok = log.filter(x => x.r === "ok");
+  const { g, players, me } = ctx(); const t = timerState(g); const ri = roundInfo(g);
+  const ex = players[g.explainer]; const ok = arr(g.log).filter(x => x.r === "ok");
+  const drawing = roundKind(g) === "draw";
   const rel = !me?.team ? "" : me.team === g.turnTeam ? "🗣️ Your team is guessing — shout it out!" : "🤫 Other team's turn — no hints!";
-  return `${teamPickBanner()}<div class="watch">
-    <div class="watch-banner t-${g.turnTeam}">
+  const banner = `<div class="watch-banner t-${g.turnTeam}">
       <span class="team-label t-${g.turnTeam}">${TEAMS[g.turnTeam].emoji} ${TEAMS[g.turnTeam].name}</span>
-      <h2 style="margin-top:8px">${esc(ex?.name || "Someone")} is explaining</h2>
-      <div class="small muted">${roundInfo(g).icon} ${(g.totalRounds || 1) > 1 ? `Round ${g.round} · ` : ""}${roundInfo(g).name}</div>
+      <h2 style="margin-top:8px">${esc(ex?.name || "Someone")} is ${drawing ? "drawing" : "explaining"}</h2>
+      <div class="small muted">${ri.icon} ${(g.totalRounds || 1) > 1 ? `Round ${g.round} · ` : ""}${ri.name} · ${turnLabel(g)}</div>
       ${rel ? `<div class="hint">${rel}</div>` : ""}
-    </div>
+    </div>`;
+  const live = `<div class="live-words">${ok.map((x, i) => `<span class="wchip ok" data-key="lw-${i}">✓ ${esc(x.w)}</span>`).join("")}</div>`;
+  if (drawing) {
+    return `${teamPickBanner()}<div class="watch">${banner}
+      <div class="watch-timer ${t.urgent}" data-urgent><span data-timer>${t.sec}</span>s</div>
+      <div class="timerbar ${t.urgent}" data-urgent style="margin-bottom:12px"><i data-timerbar style="transform:scaleX(${t.frac})"></i></div>
+      <div class="canvas-wrap" data-key="cv-wrap"><canvas id="cv"></canvas></div>
+      ${live}
+      ${scoreboard(g)}
+    </div>`;
+  }
+  return `${teamPickBanner()}<div class="watch">${banner}
     <div class="ring ${t.urgent}" data-urgent>
       <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="54"/><circle class="ring-fg" cx="60" cy="60" r="54" data-timerring style="stroke-dasharray:${RING_C};stroke-dashoffset:${RING_C * (1 - t.frac)}"/></svg>
       <div class="ring-num"><span data-timer>${t.sec}</span><small>seconds</small></div>
     </div>
-    <div class="stats" style="margin:0 0 14px"><span class="pill">🃏 ${cardsLeft(g)} cards left</span><span class="pill">✓ ${ok.length} guessed this turn</span></div>
-    <div class="live-words">${ok.map((x, i) => `<span class="wchip ok" data-key="lw-${i}">✓ ${esc(x.w)}</span>`).join("")}</div>
+    <div class="stats" style="margin:0 0 14px"><span class="pill">✓ ${ok.length} guessed this turn</span></div>
+    ${live}
     ${scoreboard(g)}
   </div>`;
 }
 
-function viewRoundEnd() {
-  const { g, isHost } = ctx(); const nr = ROUNDS[(g.round || 1) + 1];
+function viewReview() {
+  const { g, isHost } = ctx();
+  const turns = arr(curRound(g).turns); const last = (g.round || 1) >= (g.totalRounds || 1);
+  const next = !last ? ROUNDS.draw : null;
   return `<div class="grid2">
     <div class="stack">
       <div class="panel center">
-        <div style="font-size:3rem">🎆</div>
-        <h2 style="font-size:2rem">Round ${g.round} complete!</h2>
-        <p class="muted">The bowl is empty. All ${arr(g.pool).length} words go back in for the next round.</p>
+        <div style="font-size:2.6rem">${last ? "🏁" : "🎆"}</div>
+        <h2 style="font-size:1.8rem">${last ? "All turns done!" : `Round ${g.round} complete!`}</h2>
+        <p class="muted">${isHost ? "Check the answers with everyone: tap a word to switch ✓ / ✗. ⏱ = unfinished word; tap it if the team guessed it in time. The score updates instantly." : "The host is checking the answers with everyone. Spot a mistake? Say it now! ⏱ = unfinished word."}</p>
       </div>
-      <div class="round"><span class="ic">${nr.icon}</span><div><b>Next: Round ${(g.round || 1) + 1} · ${nr.name}</b><p>${nr.rule}</p></div></div>
-      <div class="panel">${isHost ? `<button class="btn gold lg wide" data-action="next-round">▶ Start Round ${(g.round || 1) + 1}</button>` : `<p class="center muted">⏳ Waiting for the host to start the next round…</p>`}</div>
+      ${turns.map((t, ti) => `<div data-key="rv-${g.round}-${ti}">${turnSummary(t, { edit: isHost, ti, compact: true })}</div>`).join("") || `<div class="panel center muted">No turns in this round yet.</div>`}
     </div>
-    <div class="stack">${scoreboard(g)}${g.lastTurn ? `<div class="h3" style="margin-top:8px">Last turn</div>${turnSummary(g.lastTurn)}` : ""}</div>
+    <div class="stack">
+      ${scoreboard(g)}
+      ${next ? `<div class="round"><span class="ic">${next.icon}</span><div><b>Next: Round 2 · ${next.name}</b><p>${next.rule}</p></div></div>` : ""}
+      <div class="panel">${isHost
+        ? `<button class="btn gold lg wide" data-action="confirm-round">${last ? "🏆 Show the winner" : "✅ Confirm & start Round 2"}</button>
+           <p class="small muted center" style="margin-top:8px">After this, the answers are locked.</p>${hostBar(true)}`
+        : `<p class="center muted">⏳ ${last ? "The winner will be revealed after the check…" : "Round 2 starts after the check…"}</p>`}</div>
+    </div>
   </div>`;
 }
 
@@ -1181,9 +1284,9 @@ function confetti() {
 }
 
 function viewOver() {
-  const { g, players, isHost } = ctx(); const sc = g.scores || {}; const r = sc.red || 0, b = sc.blue || 0;
+  const { g, players, isHost } = ctx(); const { sc, pts } = tally(g); const r = sc.red || 0, b = sc.blue || 0;
   const win = r === b ? null : r > b ? "red" : "blue";
-  const mvp = Object.entries(g.pts || {}).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const mvp = Object.entries(pts).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 5);
   return `${confetti()}<div class="panel winner ${win ? "t-" + win : ""}">
       <div class="trophy">${win ? "🏆" : "🤝"}</div>
       <h1>${win ? `${TEAMS[win].name} wins!` : "It's a tie!"}</h1>
@@ -1203,12 +1306,11 @@ function hostBar(inline = false) {
   if (!isHost || g.phase === "lobby" || g.phase === "over") return ""; // game over: the big "Play again" button does the reset
   // When the host is explaining, controls sit under the card buttons instead of floating over them.
   const hostExplaining = g.phase === "turn" && g.explainer === S.pid;
-  if (hostExplaining !== inline) return "";
-  // Turn controls only while turns are being played; at round end / game over only Reset is shown.
+  if ((hostExplaining || g.phase === "review") !== inline) return ""; // review: Reset sits under Confirm, away from the word chips
   const inPlay = g.phase === "between" || g.phase === "turn";
   return `<div class="hostbar ${inline ? "inline" : ""}" role="toolbar" aria-label="Host controls">
     <span class="hb-label">👑 Host</span>
-    ${inPlay ? `<button data-action="host-skip">⏭ <span class="lbl-long">Skip Current Player</span><span class="lbl-short">Skip player</span></button>
+    ${inPlay ? `<button data-action="host-skip" ${g.phase === "between" ? "" : "disabled"}>⏭ <span class="lbl-long">Skip Current Player</span><span class="lbl-short">Skip player</span></button>
     <button data-action="host-end" ${g.phase === "turn" ? "" : "disabled"}>⏹ <span class="lbl-long">Force End Turn</span><span class="lbl-short">End turn</span></button>` : ""}
     <button class="danger" data-action="host-reset">↺ <span class="lbl-long">Reset Game</span><span class="lbl-short">Reset</span></button>
   </div>`;
@@ -1219,7 +1321,6 @@ function viewModal() {
   return `<div class="modal-bg" data-action="modal-close"><div class="modal" role="dialog" aria-modal="true">
     <h3>${esc(m.title)}</h3><p>${esc(m.body)}</p>
     <div class="row">${m.action !== "modal-close" ? `<button class="btn ghost" data-action="modal-close">Cancel</button>` : ""}
-    ${m.alt ? `<button class="btn" data-action="modal-alt">${esc(m.alt)}</button>` : ""}
     <button class="btn ${m.danger ? "red" : "gold"}" data-action="modal-ok">${esc(m.ok)}</button></div>
   </div></div>`;
 }
@@ -1229,10 +1330,9 @@ function view() {
   if (S.data === undefined) return { key: "loading", html: `<div class="loading">Connecting to room ${S.code}…</div>` };
   const { g } = ctx();
   switch (g.phase) {
-    case "submit": return { key: "submit", html: viewSubmit() };
     case "between": return { key: "between", html: viewBetween() };
     case "turn": return g.explainer === S.pid ? { key: "explain", html: viewExplainer() } : { key: "watch", html: viewWatch() };
-    case "roundEnd": return { key: "roundEnd", html: viewRoundEnd() };
+    case "review": return { key: "review", html: viewReview() };
     case "over": return { key: "over", html: viewOver() };
     default: return { key: "lobby", html: viewLobby() };
   }
@@ -1251,6 +1351,7 @@ function patchNode(parent, x, y) {
   if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName ||
       (x.nodeType === 1 && x.getAttribute("data-key") !== y.getAttribute("data-key"))) { parent.replaceChild(y, x); return; }
   if (x.nodeType !== 1) { if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue; return; }
+  if (x.tagName === "CANVAS") return; // keep the drawing surface (and its pixel size) untouched
   for (const at of [...x.attributes]) if (!y.hasAttribute(at.name)) x.removeAttribute(at.name);
   for (const at of [...y.attributes]) if (x.getAttribute(at.name) !== at.value) x.setAttribute(at.name, at.value);
   if (x.tagName === "TEXTAREA") return; // user-owned value
@@ -1262,6 +1363,7 @@ function render() {
   if (!root) return;
   const { key, html } = view();
   morph(root, header() + `<main data-key="${key}">${S.code && S.data ? hostBanner() : ""}${html}</main>` + hostBar() + viewModal() + (S.toast ? `<div class="toast" data-key="t${S.toast.id}">${esc(S.toast.msg)}</div>` : ""));
+  paintCanvas();
 }
 
 /* ---------- Timer loop ---------- */
@@ -1299,11 +1401,28 @@ function bindEvents() {
   });
   document.addEventListener("input", e => {
     const el = e.target, m = el.dataset?.model; if (!m) return;
-    if (m === "word") S.drafts.words[+el.dataset.i] = el.value;
-    else if (m === "code") { const v = el.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4); if (el.value !== v) el.value = v; S.drafts.code = v; }
+    if (m === "code") { const v = el.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4); if (el.value !== v) el.value = v; S.drafts.code = v; }
     else S.drafts[m] = el.value;
     if (S.error && (m === "name" || m === "code")) { S.error = ""; render(); }
   });
+  // Drawing (explainer only, Draw round)
+  document.addEventListener("pointerdown", e => {
+    const cv = e.target.closest?.("#cv"); if (!cv || !canDraw()) return;
+    e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch {}
+    const { g, d } = ctx(); const key = drawKey(g);
+    if ((d.draw || {}).key !== key && S.clearedKey !== key) { S.clearedKey = key; S.db.set(roomPath("draw"), { key }); } // new word → blank canvas
+    S.strokeN++;
+    S.stroke = { key, id: String(Date.now()).padStart(14, "0") + String(S.strokeN).padStart(4, "0"), c: S.tool === "eraser" ? "e" : S.color, w: S.tool === "eraser" ? ERASER_W : S.size, pts: [canvasPoint(cv, e)] };
+    paintCanvas(); scheduleFlush();
+  });
+  document.addEventListener("pointermove", e => {
+    if (!S.stroke) return; const cv = document.getElementById("cv"); if (!cv) return;
+    const p = canvasPoint(cv, e), l = S.stroke.pts[S.stroke.pts.length - 1];
+    if (Math.abs(p[0] - l[0]) + Math.abs(p[1] - l[1]) < 4) return;
+    S.stroke.pts.push(p); paintCanvas(); scheduleFlush();
+  });
+  ["pointerup", "pointercancel"].forEach(ev => document.addEventListener(ev, () => { if (!S.stroke) return; flushStroke(); S.stroke = null; }));
+  window.addEventListener("resize", () => paintCanvas());
   document.addEventListener("submit", e => { e.preventDefault(); ACTIONS[e.target.dataset.submit]?.({}, e.target); });
   document.addEventListener("keydown", e => {
     if (S.modal) { if (e.key === "Escape") { S.modal = null; render(); } return; }
