@@ -241,7 +241,9 @@ textarea.input{min-height:110px;resize:vertical}
 .ring-num span{font-family:var(--display);font-weight:800;font-size:clamp(3rem,10vw,4.2rem);line-height:1}
 .ring.urgent .ring-num span{color:var(--red);animation:pulse 1s ease infinite}
 .ring-num small{color:var(--muted);font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:.7rem}
-.live-words{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:34px;margin:6px 0 16px}
+.live-panel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:12px 14px;margin:6px 0 16px}
+.live-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+.live-words{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:34px}
 
 /* Over */
 .winner{text-align:center;padding:clamp(20px,5vw,40px) 10px}
@@ -261,7 +263,10 @@ textarea.input{min-height:110px;resize:vertical}
 .canvas-wrap{width:100%;max-width:min(720px,max(300px,calc((100vh - 420px) * 4 / 3)));margin:0 auto;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:#fffdf6;box-shadow:0 18px 50px rgba(0,0,0,.4),inset 0 0 0 3px rgba(224,161,47,.45);touch-action:none}
 .canvas-wrap canvas{display:block;width:100%;height:100%;touch-action:none}
 .canvas-wrap.mine canvas{cursor:crosshair}
-.tools{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+.tools{display:flex;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;width:100%}
+.tools .tg{display:flex;gap:6px;align-items:center}
+.tools .tg:last-child{margin-left:auto}
+.tools{padding:0 3px}
 .tools .chip{padding:7px 12px;font-size:.85rem}
 .tools{align-items:center}
 .swatches,.sizes{display:flex;gap:5px;align-items:center}
@@ -359,17 +364,35 @@ const PACKS = {
   office: { name: "IT & Office life", icon: "💻", words: `Laptop Keyboard Mouse Monitor Printer Deadline Meeting Coffee Password WiFi Email Zoom Presentation Boss Intern Recruiter Interview Resume Salary Vacation Overtime Friday Standup Sprint Cloud Database Developer Designer Hacker Virus Reboot Screenshot Mute Desk Chair Elevator Kitchen Snack Pizza Python Burnout Badge Stapler Whiteboard Sticker Battery Download Upload Brainstorm Lunch Timesheet Calculator Handshake Folder Cable Applause Rocket Like Joystick Chart Target Tie Bitcoin Robot Copy-paste Wave`.split(" ") },
   animals: { name: "Animals", icon: "🐾", words: `Dog Cat Horse Cow Pig Sheep Goat Chicken Duck Rabbit Lion Tiger Elephant Giraffe Zebra Monkey Kangaroo Koala Camel Hippo Rhino Crocodile Snake Frog Turtle Snail Spider Butterfly Bee Ant Ladybug Fish Shark Whale Dolphin Octopus Crab Owl Eagle Parrot Flamingo Peacock Swan Squirrel Hedgehog Fox Hamster Raccoon Beaver Donkey Ostrich Worm Llama`.split(" ") },
   jobs: { name: "Jobs", icon: "👷", words: `Doctor Nurse Dentist Teacher Pilot Chef Waiter Farmer Firefighter Policeman Builder Plumber Electrician Mechanic Driver Sailor Painter Writer Journalist Judge Cashier Postman Hairdresser Baker Cleaner Gardener Vet Scientist Secretary Librarian Lifeguard Babysitter Model Coach Referee Translator Courier Miner Tailor Zookeeper Comedian Receptionist Blogger`.split(" ") },
+  food: { name: "Food & Drinks", icon: "🍔", words: `Banana Apple Lemon Strawberry Cherry Grapes Watermelon Pear Carrot Potato Tomato Mushroom Onion Cucumber Garlic Pepper Avocado Coconut Peanut Egg Bread Burger Sandwich Fries Sushi Donut Muffin Pie Steak Sausage Honey Lollipop Butter Pasta Soup Rice Jam Milk Juice Tea Wine Salt Sugar`.split(" ") },
+  home: { name: "Home & Things", icon: "🏠", words: `Bed Sofa Table Lamp Door Window Clock Mirror Umbrella Toothbrush Towel Pillow Bath Shower Toilet Sink Vacuum Broom Bucket Ladder Hammer Scissors Glasses Wallet TV Book Pen Plant Vase Fork Spoon Knife Plate Cup Bottle Basket Curtain Stairs Kettle Toaster Oven Comb Hanger Soap Rug Radio`.split(" ") },
 };
 (() => { const seen = new Set(); for (const pk of Object.values(PACKS)) pk.words = pk.words.filter(w => { const k = w.toLowerCase(); if (!w || seen.has(k)) return false; seen.add(k); return true; }); })();
 const PACK_IDS = Object.keys(PACKS);
-const activePacks = st => { const ids = String(st.packs || PACK_IDS.join(",")).split(",").filter(id => PACKS[id]); return ids.length ? ids : PACK_IDS; };
-const packWords = st => activePacks(st).flatMap(id => PACKS[id].words);
+// Words that are explained in Alias but are too abstract to draw. Every other word can come up in the Draw round.
+const NO_DRAW = {
+  newyear: `Winter Midnight Countdown Party Confetti Calendar Dance Costume Chocolate Cocoa Blanket Pajamas Sauna Lights Wrapping Postcard Marshmallow Magic Hug Salad Hangover Nap Snowstorm Ice Toy Shopping Dinner Speech Makeup`,
+  movies: `Superman Spy Godzilla Rocky Rambo Terminator Matrix Avatar Frozen Tarzan Simba Barbie Joker Godfather Gladiator Bambi Hogwarts Yoda Oscar Hollywood Stuntman Netflix TikTok Meme Shakira Elvis Hobbit Paparazzi Anime Autograph Tattoo Zorro Hercules Cleopatra Ironman Mowgli Moonwalk Minecraft`,
+  office: `Deadline Meeting Password WiFi Email Zoom Presentation Boss Intern Recruiter Interview Resume Salary Overtime Friday Standup Sprint Database Developer Designer Hacker Reboot Screenshot Mute Kitchen Snack Burnout Badge Whiteboard Sticker Brainstorm Lunch Timesheet Cable Applause Bitcoin Copy-paste`,
+  animals: ``,
+  jobs: `Journalist Secretary Librarian Babysitter Model Translator Zookeeper Comedian Receptionist Blogger`,
+  food: `Butter Pasta Soup Rice Jam Milk Juice Tea Wine Salt Sugar`,
+  home: `Soap Rug Radio`,
+};
+const ALIAS_ONLY = new Set(Object.values(NO_DRAW).join(" ").split(" ").filter(Boolean).map(w => w.toLowerCase()));
+const canBeDrawn = w => !ALIAS_ONLY.has(String(w).toLowerCase());
+// All packs are always on (no pack picker in the lobby): the word supply can't be broken by accident.
+const activePacks = () => PACK_IDS;
+const packWords = () => PACK_IDS.flatMap(id => PACKS[id].words);
 
 const ROUNDS = {
   alias: { name: "Alias", icon: "💬", rule: "Explain the word without saying it or any part of it — no spelling, no “sounds like”." },
   draw: { name: "Draw", icon: "🎨", rule: "Draw it! No letters, numbers or talking — your team guesses from the picture." },
 };
 const roundKind = g => (g.mode === "draw" && (g.round || 1) === 2 ? "draw" : "alias");
+// Points per guessed word in round i (1-based): the Draw round is worth more (×1/×2/×3, set in the lobby, frozen at game start).
+const roundPts = (g, i) => (g.mode === "draw" && i === 2 ? g.drawPts || 1 : 1);
+const drawPtsNote = n => (n > 1 ? ` Each word = <b>${n} points</b>.` : "");
 const roundInfo = g => ROUNDS[roundKind(g)];
 
 /* ---------- Safe storage (some embedded/private browsers block it) ---------- */
@@ -465,7 +488,7 @@ function ctx() {
   const g = d.game || { phase: "lobby" };
   const players = {};
   for (const [id, p] of Object.entries(d.players || {})) if (p && p.name) players[id] = p;
-  const settings = { timer: 60, drawTimer: 90, skipLimit: 3, mode: "draw", packs: PACK_IDS.join(","), ...(d.settings || {}) };
+  const settings = { timer: 60, drawTimer: 90, skipLimit: 3, mode: "draw", drawPts: 2, ...(d.settings || {}) };
   if (settings.mode !== "alias" && settings.mode !== "draw") settings.mode = "draw"; // rooms from older versions
   return { d, g, players, me: players[S.pid], settings, isHost: d.meta?.hostId === S.pid, hostId: d.meta?.hostId };
 }
@@ -501,9 +524,9 @@ function setSlot(g, players) {
 // The score is never stored: it is counted from the list of answers, so host corrections update it automatically.
 function tally(g) {
   const sc = { red: 0, blue: 0 }, pts = {};
-  const add = (team, pid, log) => { for (const x of arr(log)) if (x.r === "ok") { sc[team] = (sc[team] || 0) + 1; pts[pid] = (pts[pid] || 0) + 1; } };
-  for (const r of arr(g.rounds)) for (const t of arr(r.turns)) add(t.team, t.pid, t.log);
-  if (g.phase === "turn") add(g.turnTeam, g.explainer, g.log);
+  const add = (team, pid, log, k) => { for (const x of arr(log)) if (x.r === "ok") { sc[team] = (sc[team] || 0) + k; pts[pid] = (pts[pid] || 0) + k; } };
+  arr(g.rounds).forEach((r, i) => { for (const t of arr(r.turns)) add(t.team, t.pid, t.log, roundPts(g, i + 1)); });
+  if (g.phase === "turn") add(g.turnTeam, g.explainer, g.log, roundPts(g, g.round || 1));
   return { sc, pts };
 }
 // Skips left this turn (Infinity when unlimited). Limit is frozen into the game at turn start.
@@ -549,7 +572,7 @@ async function createRoom() {
     const pid = uid(); const now = S.db.now();
     await S.db.set(`rooms/${code}`, {
       meta: { hostId: pid, createdAt: now },
-      settings: { timer: 60, drawTimer: 90, skipLimit: 3, mode: "draw", packs: PACK_IDS.join(",") },
+      settings: { timer: 60, drawTimer: 90, skipLimit: 3, mode: "draw", drawPts: 2 },
       players: { [pid]: { name, joinedAt: now, online: true } },
       game: { phase: "lobby" },
     });
@@ -662,7 +685,7 @@ function drawCard(g) {
   if (!deck.length) {
     const used = new Set(arr(curRound(g).turns).flatMap(t => arr(t.log).map(x => String(x.w).toLowerCase())));
     for (const x of arr(g.log)) used.add(String(x.w).toLowerCase());
-    deck = shuffle(packWords(ctx().settings).filter(w => !used.has(w.toLowerCase())));
+    deck = shuffle(packWords().filter(w => !used.has(w.toLowerCase()) && (roundKind(g) !== "draw" || canBeDrawn(w))));
   }
   if (!deck.length) { g.deck = []; return null; }
   const w = deck.pop(); // the deck is shuffled; words from earlier games in this room sit at the bottom
@@ -723,31 +746,12 @@ async function cardAction(result) {
     const next = drawCard(cur);
     if (!next) return finishTurn(cur, "deck");
     cur.current = next;
-    cur.undo = { w: word, r: result, next, at: S.db.now(), turnId: tid }; // only the last action, for a few seconds
     return cur;
   });
   S.busy = false;
 }
 
-/* ---------- Undo: for a few seconds the explainer can switch the last mark ✓ ↔ ✗. The word does NOT come back (no second try, no peeking). ---------- */
-const UNDO_MS = 5000;
-const undoLeftMs = g => (g.phase === "turn" && g.undo && g.undo.turnId === g.turnId ? UNDO_MS - (S.db.now() - g.undo.at) : 0);
-async function undoAction() {
-  const { g } = ctx();
-  if (S.busy || g.explainer !== S.pid || undoLeftMs(g) <= 0 || remainingMs(g) <= 0) return;
-  S.busy = true;
-  await txGame(cur => {
-    const u = cur.undo;
-    if (cur.phase !== "turn" || !u || u.turnId !== cur.turnId || cur.current !== u.next || S.db.now() - u.at > UNDO_MS + 1000) return;
-    const log = arr(cur.log); const last = log[log.length - 1];
-    if (!last || last.w !== u.w) return;
-    log[log.length - 1] = { ...last, r: last.r === "ok" ? "skip" : "ok" }; cur.log = log; // ✗ → ✓ gives the skip back
-    cur.undo = null;
-    return cur;
-  });
-  S.busy = false;
-}
-
+// No Undo for Correct/Skip: mistakes are fixed by the host in "Last turn" right after the turn, or in the round review.
 const endTurn = (turnId, reason) => txGame(g => (g.phase === "turn" && g.turnId === turnId ? finishTurn(g, reason) : undefined));
 
 // Before a turn starts: hand this turn to another player of the same team (the skipped player keeps their place in later rounds).
@@ -768,7 +772,7 @@ async function hostSkipPlayer() {
 /* ---------- Round review: everyone sees the answers, the host can fix them, then locks the round ---------- */
 function toggleResult(ti, wi) {
   return txGame(g => {
-    if (g.phase !== "review") return;
+    if (g.phase !== "review" && g.phase !== "between") return; // between turns the host can fix "Last turn" right away
     const rounds = arr(g.rounds); const ri = (g.round || 1) - 1; const R = rounds[ri];
     if (!R || R.locked) return;
     const turns = arr(R.turns); const t = turns[ti]; if (!t) return;
@@ -787,6 +791,8 @@ function confirmRound() {
     rounds[ri] = { ...(rounds[ri] || {}), locked: true };
     if ((g.round || 1) >= (g.totalRounds || 1)) { g.rounds = rounds; g.phase = "over"; return g; }
     g.round = (g.round || 1) + 1; rounds.push({ locked: false }); g.rounds = rounds;
+    const played = new Set(); for (const R of rounds) for (const t of arr(R.turns)) for (const x of arr(t.log)) played.add(String(x.w).toLowerCase());
+    g.deck = buildDeck(roundKind(g), new Set(arr(g.used)), played); // Draw round: fresh drawable words only
     const start = g.round % 2 === 0 ? other(g.firstTeam) : g.firstTeam; // the other team opens round 2
     g.queue = buildQueue(players, start, g.round); g.turnIdx = 0; g.lastTurn = null; g.phase = "between";
     setSlot(g, players);
@@ -794,16 +800,24 @@ function confirmRound() {
   });
 }
 
+// The deck is popped from the end. Order (top first): fresh words, then words from earlier games in this room.
+// Alias: abstract (alias-only) words on top, so the drawable ones are left for the Draw round.
+// Draw: only drawable words that haven't come up in this game.
+function buildDeck(kind, used, playedThisGame) {
+  const all = packWords().filter(w => !playedThisGame.has(w.toLowerCase()) && (kind !== "draw" || canBeDrawn(w)));
+  const fresh = all.filter(w => !used.has(w.toLowerCase())), old = all.filter(w => used.has(w.toLowerCase()));
+  const layer = L => (kind === "draw" ? shuffle(L) : [...shuffle(L.filter(canBeDrawn)), ...shuffle(L.filter(w => !canBeDrawn(w)))]);
+  return [...layer(old), ...layer(fresh)];
+}
 async function startGame() {
   const { players, settings } = ctx();
   if (!teamList(players, "red").length || !teamList(players, "blue").length) return toast("Both teams need at least one player.");
   const first = Math.random() < .5 ? "red" : "blue";
-  const all = packWords(settings);
   let used = new Set(arr(ctx().g.used));
-  if (!all.some(w => !used.has(w.toLowerCase()))) used = new Set(); // every word was played already: start the memory over
-  const fresh = all.filter(w => !used.has(w.toLowerCase())), old = all.filter(w => used.has(w.toLowerCase()));
+  if (!packWords().some(w => !used.has(w.toLowerCase()))) used = new Set(); // every word was played already: start the memory over
   const g = { phase: "between", mode: settings.mode, round: 1, totalRounds: settings.mode === "draw" ? 2 : 1, firstTeam: first, used: [...used],
-    deck: [...shuffle(old), ...shuffle(fresh)], queue: buildQueue(players, first, 1), turnIdx: 0, rounds: [{ locked: false }], turnId: 0, startedAt: S.db.now() };
+    drawPts: settings.mode === "draw" ? settings.drawPts || 1 : 1,
+    deck: buildDeck("alias", used, new Set()), queue: buildQueue(players, first, 1), turnIdx: 0, rounds: [{ locked: false }], turnId: 0, startedAt: S.db.now() };
   setSlot(g, players);
   await S.db.update(roomPath(), { game: g, draw: null, words: null, extraWords: null });
 }
@@ -837,7 +851,20 @@ function flushStroke() {
   S.db.update(roomPath("draw/strokes"), { [s.id]: { c: s.c, w: s.w, p: s.pts.map(p => p.join(",")).join(";") } });
 }
 function scheduleFlush() { if (S.flushT) return; S.flushT = setTimeout(() => { S.flushT = null; flushStroke(); }, 70); }
-function clearCanvas() { const { g } = ctx(); const key = drawKey(g); S.clearedKey = key; S.db.set(roomPath("draw"), { key }); }
+// Clear adds a "clear" marker instead of deleting, so ↶ Undo can bring the whole picture back.
+const strokeId = () => String(Date.now()).padStart(14, "0") + String(S.strokeN++).padStart(4, "0");
+function visibleStrokes(dr, key) { return dr.key === key ? Object.entries(dr.strokes || {}).sort(([a], [b]) => (a < b ? -1 : 1)) : []; }
+function clearCanvas() {
+  const { g, d } = ctx(); const key = drawKey(g);
+  if ((d.draw || {}).key !== key) { S.clearedKey = key; S.db.set(roomPath("draw"), { key }); return; }
+  S.db.update(roomPath("draw/strokes"), { [strokeId()]: { c: "x" } });
+}
+function undoStroke() {
+  if (S.stroke) return; // a line is being drawn right now
+  const { g, d } = ctx(); const list = visibleStrokes(d.draw || {}, drawKey(g));
+  if (!list.length) return;
+  S.db.update(roomPath("draw/strokes"), { [list[list.length - 1][0]]: null }); // last line, eraser move or Clear
+}
 const COLORS = { k: "#1b2142", r: "#e23b3b", b: "#2d6fe0", g: "#1f9d55", y: "#f2b400", n: "#8a5a2e" };
 const COLOR_NAMES = { k: "Black", r: "Red", b: "Blue", g: "Green", y: "Yellow", n: "Brown" };
 const SIZES = [{ w: 7, name: "Thin" }, { w: 18, name: "Thick" }];
@@ -863,7 +890,8 @@ function paintCanvas() {
   const c = cv.getContext("2d");
   c.fillStyle = "#fffdf6"; c.fillRect(0, 0, W, H); c.lineCap = "round"; c.lineJoin = "round";
   const sx = W / 1000, sy = H / 750, key = drawKey(g), dr = d.draw || {};
-  const strokes = dr.key === key ? Object.entries(dr.strokes || {}).sort(([a], [b]) => (a < b ? -1 : 1)).map(([, s]) => s) : [];
+  let strokes = visibleStrokes(dr, key).map(([, s]) => s);
+  const lastClear = strokes.map(s => s.c).lastIndexOf("x"); if (lastClear >= 0) strokes = strokes.slice(lastClear + 1);
   if (S.stroke && S.stroke.key === key) strokes.push({ c: S.stroke.c, w: S.stroke.w, p: S.stroke.pts.map(p => p.join(",")).join(";") });
   for (const s of strokes) {
     const pts = String(s.p || "").split(";").filter(Boolean).map(q => q.split(",").map(Number));
@@ -911,17 +939,11 @@ const ACTIONS = {
   balance: () => balanceTeams(false),
   shuffle: () => balanceTeams(true),
   setting: ds => S.db.update(roomPath("settings"), { [ds.k]: ds.k === "mode" ? ds.v : Number(ds.v) }),
-  pack: ds => {
-    const cur = activePacks(ctx().settings); const on = cur.includes(ds.id);
-    const next = on ? cur.filter(x => x !== ds.id) : [...cur, ds.id];
-    if (!next.length) return toast("Keep at least one word pack.");
-    S.db.update(roomPath("settings"), { packs: PACK_IDS.filter(id => next.includes(id)).join(",") });
-  },
   start: () => startGame(),
   "start-turn": () => startTurn(),
   correct: (ds, el) => { el?.blur(); cardAction("ok"); },
   skip: (ds, el) => { el?.blur(); cardAction("skip"); },
-  undo: (ds, el) => { el?.blur(); undoAction(); },
+  "draw-undo": (ds, el) => { el?.blur(); if (canDraw()) undoStroke(); },
   "end-my-turn": (ds, el) => { el?.blur(); const { g } = ctx(); if (g.phase !== "turn" || g.explainer !== S.pid) return;
     S.endTurnId = g.turnId; S.modal = { title: "End your turn now?", body: "Points are kept.", ok: "🏳️ End my turn", action: "end-my-turn-ok" }; render(); },
   "end-my-turn-ok": () => { S.modal = null; render(); const { g } = ctx(); if (g.phase === "turn" && g.explainer === S.pid && g.turnId === S.endTurnId) endTurn(g.turnId, "gaveup"); },
@@ -989,7 +1011,6 @@ function viewHome() {
         ${inv ? `
           <div class="center muted">You're invited to room <b style="color:var(--gold);letter-spacing:3px">${esc(S.drafts.code)}</b></div>
           <button type="submit" class="btn gold lg wide" ${S.loading ? "disabled" : ""}>${S.loading ? "Joining…" : "🎉 Join the party"}</button>
-          <button type="button" class="btn ghost wide small" data-action="show-create">or host a new room</button>
         ` : `
           <button type="button" class="btn gold lg wide" data-action="create" ${S.loading ? "disabled" : ""}>🎄 Create a room</button>
           <div class="or">OR JOIN</div>
@@ -1036,6 +1057,7 @@ function settingsPanel() {
       ${pill(draw ? "💬 Alias + 🎨 Draw · 2 rounds" : "💬 Alias · 1 round")}
       ${pill(`⏱ ${st.timer}s to explain`)}
       ${draw ? pill(`🎨 ${st.drawTimer}s to draw`) : ""}
+      ${draw && (st.drawPts || 1) > 1 ? pill(`🎨 ${st.drawPts} points per drawn word`) : ""}
       ${pill(`✗ ${st.skipLimit > 0 ? st.skipLimit : "Unlimited"} skip${st.skipLimit === 1 ? "" : "s"} per turn`)}
     </div><p class="small muted" style="margin-top:10px">${est} Set by the host.</p>${uneven}</div>`;
   }
@@ -1048,9 +1070,10 @@ function settingsPanel() {
       ${mode("alias", "Alias", "1 round · 💬 explain only")}
     </div></div>
     <div class="set-row"><div class="h3">💬 Time to explain</div><div class="row">${[45, 60, 90].map(v => chip("timer", v, v + "s")).join("")}</div></div>
-    ${draw ? `<div class="set-row"><div class="h3">🎨 Time to draw</div><div class="row">${[60, 90, 120].map(v => chip("drawTimer", v, v + "s")).join("")}</div></div>` : ""}
+    ${draw ? `<div class="set-row"><div class="h3">🎨 Time to draw</div><div class="row">${[60, 90, 120].map(v => chip("drawTimer", v, v + "s")).join("")}</div></div>
+    <div class="set-row"><div class="h3">🎨 Points per drawn word</div><div class="row">${[1, 2, 3].map(v => chip("drawPts", v, "×" + v)).join("")}</div></div>` : ""}
     <div class="set-row"><div class="h3">Skips per turn</div><div class="row">${[1, 2, 3, 5].map(v => chip("skipLimit", v, v)).join("")}${chip("skipLimit", 0, "∞")}</div></div>
-    <div class="set-row"><div class="h3">Word packs</div><div class="row">${PACK_IDS.map(id => `<button class="chip ${activePacks(st).includes(id) ? "on" : ""}" data-action="pack" data-id="${id}">${PACKS[id].icon} ${PACKS[id].name}</button>`).join("")}</div></div>
+    <div class="set-row"><div class="h3">Word packs · ${packWords().length} words</div><div class="row">${PACK_IDS.map(id => `<span class="pill">${PACKS[id].icon} ${PACKS[id].name}</span>`).join("")}</div></div>
     <p class="small muted">${est}</p>${uneven}
   </div>`;
 }
@@ -1092,7 +1115,7 @@ function viewLobby() {
         <details class="howto"><summary>How to play</summary><ol>
           <li>Teams take turns. One player explains, their team guesses before the timer runs out.</li>
           <li>${settings.mode === "draw" ? "Round 1: explain with words. Round 2: draw new words — no letters, no talking." : "Explain with words — never say the word or any part of it."}</li>
-          <li><b>Correct</b> = +1 point. <b>Skip</b> = next word (limited per turn). Wrong button? <b>Undo</b> switches ✓ / ✗ for 5 seconds.</li>
+          <li><b>Correct</b> = +1 point${settings.mode === "draw" && (settings.drawPts || 1) > 1 ? ` (${settings.drawPts} points in the Draw round)` : ""}. <b>Skip</b> = next word (limited per turn). Wrong button? Tell the host — they fix it right after the turn.</li>
           <li>Everyone explains once per round. After each round the host checks the answers with everyone.</li>
         </ol></details>
       </div>
@@ -1112,7 +1135,7 @@ function scoreboard(g) {
 
 function roundBanner(g) {
   const ri = roundInfo(g); const total = g.totalRounds || 1;
-  return `<div class="round"><span class="ic">${ri.icon}</span><div><b>${total > 1 ? `Round ${g.round || 1} of ${total} · ` : ""}${ri.name}</b><p>${ri.rule}</p></div></div>`;
+  return `<div class="round"><span class="ic">${ri.icon}</span><div><b>${total > 1 ? `Round ${g.round || 1} of ${total} · ` : ""}${ri.name}</b><p>${ri.rule}${drawPtsNote(roundPts(g, g.round || 1))}</p></div></div>`;
 }
 
 const REASONS = { time: "⏰ Time's up!", host: "⏹ Ended by the host", deck: "🃏 Out of words!", gaveup: "🏳️ Ended early" };
@@ -1128,10 +1151,10 @@ function wordChips(log, opts = {}) {
 }
 function turnSummary(t, opts = {}) {
   if (!t) return "";
-  const log = arr(t.log); const n = r => log.filter(x => x.r === r).length; const ok = n("ok"), un = n("time");
+  const log = arr(t.log); const n = r => log.filter(x => x.r === r).length; const ok = n("ok"), un = n("time"); const k = opts.mult || 1;
   return `<div class="summary t-${t.team}">
-    <div class="sum-head"><span>${esc(t.name)} · ${TEAMS[t.team]?.name || ""}</span><span class="sum-pts">+${ok}</span></div>
-    <div class="sum-sub">${[REASONS[t.reason] || "", `${ok} guessed`, `${log.length - ok - un} skipped`, un ? `⏱ ${un} unfinished` : ""].filter(Boolean).map(x => `<span class="nw">${x}</span>`).join(" · ")}</div>
+    <div class="sum-head"><span>${esc(t.name)} · ${TEAMS[t.team]?.name || ""}</span><span class="sum-pts">+${ok * k}</span></div>
+    <div class="sum-sub">${[REASONS[t.reason] || "", `${ok} guessed${k > 1 ? ` × ${k} pts` : ""}`, `${log.length - ok - un} skipped`, un ? `⏱ ${un} unfinished` : ""].filter(Boolean).map(x => `<span class="nw">${x}</span>`).join(" · ")}</div>
     <div class="sum-words">${wordChips(log, opts)}${!log.length ? `<span class="muted small">The turn ended before any word was shown.</span>` : ""}</div>
   </div>`;
 }
@@ -1151,7 +1174,7 @@ function viewBetween() {
         ${ex && ex.online === false && isHost ? `<div class="note small" style="margin-top:14px">${esc(ex.name)} seems offline. Use <b>Skip Current Player</b> below if they're away.</div>` : ""}
         <div style="margin-top:20px" class="stack">
           ${isMe ? `<button class="btn gold lg wide" data-action="start-turn">▶ Start my turn</button>
-              <p class="small muted kbd-hint">Desktop shortcuts: <kbd>Space</kbd> = Correct, <kbd>S</kbd> = Skip, <kbd>⌫</kbd> = Undo</p>`
+              <p class="small muted kbd-hint">Desktop shortcuts: <kbd>Space</kbd> = Correct, <kbd>S</kbd> = Skip</p>`
             : isHost ? `<button class="btn lg wide" data-action="start-turn" ${ex ? "" : "disabled"}>▶ Start turn for ${ex ? esc(ex.name) : "…"}</button>
               <p class="small muted">Or wait for ${ex ? esc(ex.name) : "the player"} to press start.</p>`
             : `<p class="muted">⏳ Waiting for ${ex ? esc(ex.name) : "the next player"} to start…</p>`}
@@ -1160,7 +1183,8 @@ function viewBetween() {
     </div>
     <div class="stack">
       ${scoreboard(g)}
-      ${g.lastTurn ? `<div class="h3" style="margin-top:8px">Last turn</div>${turnSummary(g.lastTurn)}` : ""}
+      ${(() => { const turns = arr(curRound(g).turns); const ti = turns.length - 1; if (ti < 0) return "";
+        return `<div class="h3" style="margin-top:8px">Last turn</div>${isHost ? `<p class="small muted" style="margin:0 0 6px">Wrong mark? Tap a word to fix it: ✓ / ✗, or ⏱ → ✓.</p>` : ""}<div data-key="lt-${g.round}-${ti}">${turnSummary(turns[ti], { edit: isHost, ti, mult: roundPts(g, g.round || 1) })}</div>`; })()}
     </div>
   </div>`;
 }
@@ -1178,7 +1202,6 @@ function turnControls(g) {
       <button class="btn skipb" data-action="skip" ${sl <= 0 ? "disabled" : ""}>✗ Skip <kbd>S</kbd>${sl === Infinity ? "" : `<small>${sl} left</small>`}</button>
       <button class="btn correctb" data-action="correct">✓ Correct <kbd>Space</kbd></button>
     </div>
-    ${undoLeftMs(g) > 0 ? `<div class="center"><button class="btn undo" data-action="undo" data-key="undo-${log.length}">↩️ ${esc(g.undo.w)}: ${g.undo.r === "ok" ? "✓ → ✗" : "✗ → ✓"} <kbd>⌫</kbd></button></div>` : ""}
     <div class="center"><button class="btn ghost endmine" data-action="end-my-turn">🏳️ End my turn</button></div>
     ${hostBar(true)}`;
 }
@@ -1197,10 +1220,15 @@ function viewExplainer() {
       <div class="draw-head">
         <div class="draw-word" data-key="dw-${g.turnId}-${hash(w)}-${arr(g.log).length}">🎨 Draw: <b>${esc(w)}</b></div>
         <div class="tools">
+          <div class="tg">
           <div class="swatches">${Object.keys(COLORS).map(k => `<button class="sw ${S.tool === "pen" && S.color === k ? "on" : ""}" style="--c:${COLORS[k]}" data-action="color" data-c="${k}" title="${COLOR_NAMES[k]}" aria-label="${COLOR_NAMES[k]}"></button>`).join("")}</div>
           <div class="sizes">${SIZES.map(s => `<button class="chip sz ${S.tool === "pen" && S.size === s.w ? "on" : ""}" data-action="size" data-w="${s.w}" title="${s.name} line" aria-label="${s.name} line"><i style="width:${s.w === 7 ? 6 : 14}px;height:${s.w === 7 ? 6 : 14}px"></i></button>`).join("")}</div>
+          </div>
+          <div class="tg">
           <button class="chip ${S.tool === "eraser" ? "on" : ""}" data-action="tool" data-tool="eraser" title="Eraser">🧽<span class="lbl"> Eraser</span></button>
-          <button class="chip" data-action="clear-canvas" title="Clear">🗑<span class="lbl"> Clear</span></button>
+          <button class="chip" data-action="clear-canvas" title="Clear (Undo brings it back)">🗑<span class="lbl"> Clear</span></button>
+          <button class="chip" data-action="draw-undo" title="Undo the last line">↶<span class="lbl"> Undo</span></button>
+          </div>
         </div>
       </div>
       <div class="canvas-wrap mine" data-key="cv-wrap"><canvas id="cv"></canvas></div>
@@ -1230,7 +1258,9 @@ function viewWatch() {
       <div class="small muted">${ri.icon} ${(g.totalRounds || 1) > 1 ? `Round ${g.round} · ` : ""}${ri.name} · ${turnLabel(g)}</div>
       ${rel ? `<div class="hint">${rel}</div>` : ""}
     </div>`;
-  const live = `<div class="live-words">${ok.map((x, i) => `<span class="wchip ok" data-key="lw-${i}">✓ ${esc(x.w)}</span>`).join("")}</div>`;
+  const all = arr(g.log), sk = all.length - ok.length;
+  const live = `<div class="live-panel"><div class="live-head"><span>This turn</span><span>✓ ${ok.length} guessed · ✗ ${sk} skipped</span></div>
+    <div class="live-words">${all.map((x, i) => `<span class="wchip ${x.r === "ok" ? "ok" : "skip"}" data-key="lw-${i}">${x.r === "ok" ? "✓" : "✗"} ${esc(x.w)}</span>`).join("") || `<span class="muted small">Guessed and skipped words appear here.</span>`}</div></div>`;
   if (drawing) {
     return `${teamPickBanner()}<div class="watch">${banner}
       <div class="watch-timer ${t.urgent}" data-urgent><span data-timer>${t.sec}</span>s</div>
@@ -1245,7 +1275,6 @@ function viewWatch() {
       <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="54"/><circle class="ring-fg" cx="60" cy="60" r="54" data-timerring style="stroke-dasharray:${RING_C};stroke-dashoffset:${RING_C * (1 - t.frac)}"/></svg>
       <div class="ring-num"><span data-timer>${t.sec}</span><small>seconds</small></div>
     </div>
-    <div class="stats" style="margin:0 0 14px"><span class="pill">✓ ${ok.length} guessed this turn</span></div>
     ${live}
     ${scoreboard(g)}
   </div>`;
@@ -1262,11 +1291,11 @@ function viewReview() {
         <h2 style="font-size:1.8rem">${last ? "All turns done!" : `Round ${g.round} complete!`}</h2>
         <p class="muted">${isHost ? "Check the answers with everyone: tap a word to switch ✓ / ✗. ⏱ = unfinished word; tap it if the team guessed it in time. The score updates instantly." : "The host is checking the answers with everyone. Spot a mistake? Say it now! ⏱ = unfinished word."}</p>
       </div>
-      ${turns.map((t, ti) => `<div data-key="rv-${g.round}-${ti}">${turnSummary(t, { edit: isHost, ti, compact: true })}</div>`).join("") || `<div class="panel center muted">No turns in this round yet.</div>`}
+      ${turns.map((t, ti) => `<div data-key="rv-${g.round}-${ti}">${turnSummary(t, { edit: isHost, ti, mult: roundPts(g, g.round || 1) })}</div>`).join("") || `<div class="panel center muted">No turns in this round yet.</div>`}
     </div>
     <div class="stack">
       ${scoreboard(g)}
-      ${next ? `<div class="round"><span class="ic">${next.icon}</span><div><b>Next: Round 2 · ${next.name}</b><p>${next.rule}</p></div></div>` : ""}
+      ${next ? `<div class="round"><span class="ic">${next.icon}</span><div><b>Next: Round 2 · ${next.name}</b><p>${next.rule}${drawPtsNote(roundPts(g, 2))}</p></div></div>` : ""}
       <div class="panel">${isHost
         ? `<button class="btn gold lg wide" data-action="confirm-round">${last ? "🏆 Show the winner" : "✅ Confirm & start Round 2"}</button>
            <p class="small muted center" style="margin-top:8px">After this, the answers are locked.</p>${hostBar(true)}`
@@ -1370,7 +1399,7 @@ function render() {
 function tick() {
   if (!S.code || !S.data) return;
   const off = hostOffline(); if (off !== S.lastHostOff) { S.lastHostOff = off; render(); }
-  const uv = undoLeftMs(ctx().g) > 0; if (uv !== S.lastUndoVis) { S.lastUndoVis = uv; render(); }
+
   const { g, isHost } = ctx();
   if (g.phase !== "turn") return;
   const t = timerState(g); const ms = remainingMs(g);
@@ -1433,7 +1462,7 @@ function bindEvents() {
     if (g.phase !== "turn" || g.explainer !== S.pid) return;
     if (e.code === "Space" || e.key === " ") { e.preventDefault(); if (!e.repeat) cardAction("ok"); }
     else if (e.key === "s" || e.key === "S") { e.preventDefault(); if (!e.repeat) cardAction("skip"); }
-    else if (e.key === "Backspace") { e.preventDefault(); if (!e.repeat) undoAction(); }
+
   });
 }
 
